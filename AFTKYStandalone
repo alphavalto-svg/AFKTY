@@ -1,8 +1,10 @@
 local Players = game:GetService("Players")
-local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
 local HUB_KEY = "hub_live_6812bd621eb9953eee0b5421ad25db77c7fcd9aea475bceb"
+local QUEUE_URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone?token=GHSAT0AAAAAADRSYXZ4UNOKAWI272X255F62KUHK6Q"
+local SAVE_DIR = "AFKTY"
+local SAVE_FILE = "AFKTY/token.txt"
 local function queueReexec()
 	local q = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport
 	if not q then
@@ -10,34 +12,134 @@ local function queueReexec()
 	end
 	local code = [[
 task.wait(5)
-local urls = {
-	"https://github.com/alphavalto-svg/AFKTY/blob/main/AFTKYStandalone",
-}
-local function compile(body)
+local g = (getgenv and getgenv()) or {}
+g.AFKTY_HUB_KEY = "]] .. HUB_KEY .. [["
+local token = g.AFKTY_SAVED_TOKEN or ""
+local okBody, body = pcall(function() return game:HttpGet("]] .. QUEUE_URL .. [[") end)
+if okBody and type(body)=="string" and #body>0 then
 	local f = loadstring(body)
-	if not f then return nil end
-	local ok, res = pcall(f)
-	if ok then return res end
-	return nil
+	if f then pcall(f) end
+else
+ local urls = {
+ 	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFTKYStandalone",
+ 	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone",
+ 	"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
+ 	"https://api.afkty.com/sdk/v3"
+ }
+ local function compile(body)
+ 	local f = loadstring(body)
+ 	if not f then return nil end
+ 	local ok, res = pcall(f)
+ 	if ok then return res end
+ 	return nil
+ end
+ local AFKTY = nil
+ for _, url in ipairs(urls) do
+ 	local ok1, res1 = pcall(function() return loadstring(game:HttpGet(url))() end)
+ 	if ok1 and res1 then AFKTY = res1 break end
+ 	local ok2, raw = pcall(function() return game:HttpGetAsync(url) end)
+ 	if ok2 and type(raw)=="string" and #raw>0 then
+ 		local r = compile(raw)
+ 		if r then AFKTY = r break end
+ 	end
+ end
+ if type(AFKTY)=="function" then
+ 	local okf, resf = pcall(function() return AFKTY() end)
+ 	if okf and type(resf)=="table" then AFKTY = resf end
+ end
+ if AFKTY then
+ 	local cfg = {
+ 		userToken = token,
+ 		autoReconnect = true,
+ 		heartbeatInterval = 10000,
+ 		hubKey = "]] .. HUB_KEY .. [["
+ 	}
+ 	for _, m in ipairs({"Init","Initialize","Connect","Start"}) do
+ 		if AFKTY[m] then
+ 			local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
+ 			if ok then break end
+ 		end
+ 	end
+ end
 end
-local AFKTY = nil
-for _, url in ipairs(urls) do
-	local ok1, res1 = pcall(function() return loadstring(game:HttpGet(url))() end)
-	if ok1 and res1 then AFKTY = res1 break end
-	local ok2, raw = pcall(function() return game:HttpGetAsync(url) end)
-	if ok2 and type(raw)=="string" and #raw>0 then
-		local r = compile(raw)
-		if r then AFKTY = r break end
+local function queueReexecGithub()
+	local q = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport
+	if not q then
+		return
+	end
+	local code = [[
+task.wait(5)
+local token = ""
+if isfile and readfile and isfile("AFKTY/token.txt") then
+	local ok, val = pcall(function() return readfile("AFKTY/token.txt") end)
+	if ok and type(val)=="string" then token = val end
+end
+if token == "" then
+	local g = (getgenv and getgenv()) or {}
+	token = g.AFKTY_SAVED_TOKEN or ""
+end
+local urls = {
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFKTYStandalone.client.lua",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFKTYStandalone.client.lua",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFKTYStandalone",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFKTYStandalone",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFTKYStandalone"
+}
+local fetched = nil
+for _, u in ipairs(urls) do
+	local ok1, body1 = pcall(function() return game:HttpGet(u) end)
+	if ok1 and type(body1)=="string" and #body1>0 then fetched = body1 break end
+	local ok2, body2 = pcall(function() return game:HttpGetAsync(u) end)
+	if ok2 and type(body2)=="string" and #body2>0 then fetched = body2 break end
+	if http_request then
+		local ok3, resp3 = pcall(function() return http_request({Url=u, Method="GET"}) end)
+		if ok3 and resp3 then
+			local b = resp3.Body or resp3.body
+			local c = resp3.StatusCode or resp3.status_code or resp3.status
+			if c==200 and type(b)=="string" and #b>0 then fetched = b break end
+		end
+	end
+	if syn and syn.request then
+		local ok4, resp4 = pcall(function() return syn.request({Url=u, Method="GET"}) end)
+		if ok4 and resp4 then
+			local b = resp4.Body or resp4.body
+			local c = resp4.StatusCode or resp4.status_code or resp4.status
+			if c==200 and type(b)=="string" and #b>0 then fetched = b break end
+		end
 	end
 end
-if type(AFKTY)=="function" then
-	local okf, resf = pcall(function() return AFKTY() end)
-	if okf and type(resf)=="table" then AFKTY = resf end
-end
-local g = (getgenv and getgenv()) or {}
-local token = g.AFKTY_SAVED_TOKEN or ""
-local orig = g.AFKTY_ORIG_PLACEID
-if orig == nil or orig == game.PlaceId then
+if fetched then
+	local f = loadstring(fetched)
+	if f then
+		pcall(f)
+	end
+else
+	local sdkUrls = {
+		"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
+		"https://api.afkty.com/sdk/v3"
+	}
+	local function compile(body)
+		local ff = loadstring(body)
+		if not ff then return nil end
+		local ok, res = pcall(ff)
+		if ok then return res end
+		return nil
+	end
+	local AFKTY = nil
+	for _, url in ipairs(sdkUrls) do
+		local ok1, res1 = pcall(function() return loadstring(game:HttpGet(url))() end)
+		if ok1 and res1 then AFKTY = res1 break end
+		local ok2, raw = pcall(function() return game:HttpGetAsync(url) end)
+		if ok2 and type(raw)=="string" and #raw>0 then
+			local r = compile(raw)
+			if r then AFKTY = r break end
+		end
+	end
+	if type(AFKTY)=="function" then
+		local okf, resf = pcall(function() return AFKTY() end)
+		if okf and type(resf)=="table" then AFKTY = resf end
+	end
 	if AFKTY then
 		local cfg = {
 			userToken = token,
@@ -52,11 +154,40 @@ if orig == nil or orig == game.PlaceId then
 			end
 		end
 	end
-else
-	print("Teleported to different game (PlaceId: " .. tostring(game.PlaceId) .. "), not re-executing.")
-end
+	end
 ]]
 	q(code)
+end
+ 
+local function startSystem()
+	local q = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport
+	if not q then
+		return
+	end
+	local scriptToQueue = [[
+if not game:IsLoaded() then game.Loaded:Wait() end
+repeat task.wait() until game:GetService("Players").LocalPlayer
+task.wait(1)
+local savedToken = ""
+if isfile and readfile and isfile("AFKTY/token.txt") then
+	local ok, val = pcall(function() return readfile("AFKTY/token.txt") end)
+	if ok and type(val)=="string" then savedToken = val end
+end
+if savedToken == "" then
+	local g = (getgenv and getgenv()) or {}
+	if g and type(g.AFKTY_SAVED_TOKEN)=="string" then savedToken = g.AFKTY_SAVED_TOKEN end
+end
+local rawOk, rawBody = pcall(function() return game:HttpGet("]] .. QUEUE_URL .. [[") end)
+if rawOk and type(rawBody)=="string" and #rawBody>0 then
+	local f = loadstring(rawBody)
+	if f then
+		local ok = pcall(f)
+	end
+end
+]]
+	q(scriptToQueue)
+	-- Also queue the Github reexec fallback with status logic
+	queueReexecGithub()
 end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -158,6 +289,12 @@ ConnectButton.MouseButton1Click:Connect(function()
 		g.AFKTY_SAVED_TOKEN = token
 		g.AFKTY_ORIG_PLACEID = game.PlaceId
 	end
+	if makefolder and isfolder and not isfolder(SAVE_DIR) then
+		pcall(function() makefolder(SAVE_DIR) end)
+	end
+	if writefile then
+		pcall(function() writefile(SAVE_FILE, token) end)
+	end
 	connecting = true
 	ConnectButton.AutoButtonColor = false
 	ConnectButton.Text = "Connecting..."
@@ -166,6 +303,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 	local function tryLoadSDK()
 		local urls = {
 			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
+			"https://api.afkty.com/sdk/v3"
 		}
 		local lastErr = ""
 		if type(loadstring) ~= "function" then
@@ -248,12 +386,16 @@ ConnectButton.MouseButton1Click:Connect(function()
 		AFKTY.OnConnected:Connect(function()
 			StatusLabel.Text = "Connected"
 			ConnectButton.Text = "Connected"
+			pcall(function() AFKTY:SetStatus("Connected") end)
+			startSystem()
 		end)
 	end
 	if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 		AFKTY.OnDisconnected:Connect(function()
 			StatusLabel.Text = "Disconnected, reconnecting..."
 			ConnectButton.Text = "Reconnecting..."
+			pcall(function() AFKTY:SetStatus("Disconnected") end)
+			pcall(function() AFKTY:Alert("Disconnected") end)
 			spawn(function()
 				local deadline = tick() + 15
 				local reconnected = false
@@ -263,6 +405,8 @@ ConnectButton.MouseButton1Click:Connect(function()
 					end)
 					if okConn and isConn then
 						reconnected = true
+						pcall(function() AFKTY:SetStatus("Reconnected") end)
+						pcall(function() AFKTY:Notify("Reconnected", "Connection restored") end)
 						break
 					end
 					wait(0.5)
@@ -281,15 +425,8 @@ ConnectButton.MouseButton1Click:Connect(function()
 							Duration = 5
 						})
 					end)
-					if AFKTY and AFKTY.Notify then
-						pcall(function()
-							AFKTY:Notify("Disconnected", "Did not reconnect in 15s")
-						end)
-					elseif AFKTY and AFKTY.Alert then
-						pcall(function()
-							AFKTY:Alert("Disconnected > 15s")
-						end)
-					end
+					pcall(function() AFKTY:Alert("Disconnected > 15s") end)
+					pcall(function() AFKTY:Disconnect("No reconnect in 15s") end)
 				end
 			end)
 		end)
@@ -347,7 +484,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 		connecting = false
 		return
 	end
-	queueReexec()
+	queueReexecGithub()
 	spawn(function()
 		local deadline = tick() + 15
 		while tick() < deadline do
@@ -368,4 +505,141 @@ ConnectButton.MouseButton1Click:Connect(function()
 			connecting = false
 		end
 	end)
+end)
+spawn(function()
+	local fileToken = nil
+	if isfile and readfile and isfile(SAVE_FILE) then
+		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
+		if ok and type(val)=="string" then
+			fileToken = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
+		end
+	end
+	if not fileToken and type(getgenv)=="function" then
+		local g = getgenv()
+		if g and type(g.AFKTY_SAVED_TOKEN)=="string" then
+			fileToken = (g.AFKTY_SAVED_TOKEN:gsub("^%s+",""):gsub("%s+$","")):upper()
+		end
+	end
+	if fileToken and #fileToken==6 then
+		TokenInput.Text = fileToken
+		-- Auto-connect using saved token
+		if not connecting then
+			ConnectButton.AutoButtonColor = false
+			ConnectButton.Text = "Connecting..."
+			TokenInput.Active = false
+			ConnectButton.Active = false
+			-- Simulate click path by reusing logic
+			local token = fileToken
+			connecting = true
+			local function compile(body)
+				local lf = loadstring(body)
+				if not lf then
+					return nil, "failed to compile SDK"
+				end
+				local ok, res = pcall(lf)
+				if ok and res ~= nil then
+					return res, nil
+				end
+				return nil, tostring(res)
+			end
+			local function tryLoadSDK()
+				local urls = {
+					"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
+					"https://api.afkty.com/sdk/v3"
+				}
+				local lastErr = ""
+				if type(loadstring) ~= "function" then
+					lastErr = "loadstring unavailable"
+					return nil, lastErr
+				end
+				for _, url in ipairs(urls) do
+					local ok1, res1 = pcall(function()
+						return loadstring(game:HttpGet(url))()
+					end)
+					if ok1 and res1 ~= nil then
+						return res1, nil
+					end
+					local ok2, raw = pcall(function()
+						return game:HttpGetAsync(url)
+					end)
+					if ok2 and type(raw) == "string" and #raw > 0 then
+						local res3, err3 = compile(raw)
+						if res3 then
+							return res3, nil
+						else
+							lastErr = err3
+						end
+					end
+					local requestFns = {}
+					if syn and syn.request then table.insert(requestFns, syn.request) end
+					if type(http_request) == "function" then table.insert(requestFns, http_request) end
+					if type(request) == "function" then table.insert(requestFns, request) end
+					for _, rf in ipairs(requestFns) do
+						local okr, resp = pcall(function() return rf({Url = url, Method = "GET"}) end)
+						if okr and resp then
+							local code = resp.StatusCode or resp.status_code or resp.status
+							local body = resp.Body or resp.body
+							if code == 200 and type(body) == "string" and #body > 0 then
+								local res5, err5 = compile(body)
+								if res5 then
+									return res5, nil
+								else
+									lastErr = err5
+								end
+							else
+								lastErr = "http " .. tostring(code)
+							end
+						end
+					end
+				end
+				return nil, lastErr
+			end
+			local sdkErr
+			AFKTY, sdkErr = tryLoadSDK()
+			if not AFKTY then
+				StatusLabel.Text = "SDK load failed: " .. (sdkErr or "unknown")
+				ConnectButton.AutoButtonColor = true
+				ConnectButton.Text = "Connect"
+				TokenInput.Active = true
+				ConnectButton.Active = true
+				connecting = false
+				return
+			end
+			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
+				AFKTY.OnConnected:Connect(function()
+					StatusLabel.Text = "Connected"
+					ConnectButton.Text = "Connected"
+					pcall(function() AFKTY:SetStatus("Connected") end)
+					startSystem()
+				end)
+			end
+			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
+				AFKTY.OnDisconnected:Connect(function()
+					StatusLabel.Text = "Disconnected, reconnecting..."
+					ConnectButton.Text = "Reconnecting..."
+					pcall(function() AFKTY:SetStatus("Disconnected") end)
+					pcall(function() AFKTY:Alert("Disconnected") end)
+				end)
+			end
+			if type(AFKTY) == "function" then
+				local okf, resf = pcall(function() return AFKTY() end)
+				if okf and type(resf) == "table" then
+					AFKTY = resf
+				end
+			end
+			local cfg = {
+				userToken = token,
+				autoReconnect = true,
+				heartbeatInterval = 10000,
+				hubKey = HUB_KEY
+			}
+			local methods = {"Init","Initialize","Connect","Start"}
+			for _, m in ipairs(methods) do
+				if AFKTY[m] then
+					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
+					if ok then break end
+				end
+			end
+		end
+	end
 end)
