@@ -1,0 +1,373 @@
+local Players = game:GetService("Players")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
+local HUB_KEY = "hub_live_6812bd621eb9953eee0b5421ad25db77c7fcd9aea475bceb"
+local function queueReexec()
+	local q = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport
+	if not q then
+		return
+	end
+	local code = [[
+task.wait(5)
+local urls = {
+	"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
+	"https://api.afkty.com/sdk/v3"
+}
+local function compile(body)
+	local f = loadstring(body)
+	if not f then return nil end
+	local ok, res = pcall(f)
+	if ok then return res end
+	return nil
+end
+local AFKTY = nil
+for _, url in ipairs(urls) do
+	local ok1, res1 = pcall(function() return loadstring(game:HttpGet(url))() end)
+	if ok1 and res1 then AFKTY = res1 break end
+	local ok2, raw = pcall(function() return game:HttpGetAsync(url) end)
+	if ok2 and type(raw)=="string" and #raw>0 then
+		local r = compile(raw)
+		if r then AFKTY = r break end
+	end
+end
+if type(AFKTY)=="function" then
+	local okf, resf = pcall(function() return AFKTY() end)
+	if okf and type(resf)=="table" then AFKTY = resf end
+end
+local g = (getgenv and getgenv()) or {}
+local token = g.AFKTY_SAVED_TOKEN or ""
+local orig = g.AFKTY_ORIG_PLACEID
+if orig == nil or orig == game.PlaceId then
+	if AFKTY then
+		local cfg = {
+			userToken = token,
+			autoReconnect = true,
+			heartbeatInterval = 10000,
+			hubKey = "]] .. HUB_KEY .. [["
+		}
+		for _, m in ipairs({"Init","Initialize","Connect","Start"}) do
+			if AFKTY[m] then
+				local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
+				if ok then break end
+			end
+		end
+	end
+else
+	print("Teleported to different game (PlaceId: " .. tostring(game.PlaceId) .. "), not re-executing.")
+end
+]]
+	q(code)
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AFKTYStandalone"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+do
+	if syn and syn.protect_gui then
+		syn.protect_gui(ScreenGui)
+	end
+	ScreenGui.Parent = parentGui
+end
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 340, 0, 180)
+Frame.Position = UDim2.new(0.5, -170, 0.5, -90)
+Frame.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 10)
+Corner.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "AFKTY Standalone"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Parent = Frame
+
+local TokenInput = Instance.new("TextBox")
+TokenInput.Size = UDim2.new(1, -20, 0, 36)
+TokenInput.Position = UDim2.new(0, 10, 0, 52)
+TokenInput.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+TokenInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+TokenInput.PlaceholderText = "Enter Player Token"
+TokenInput.Font = Enum.Font.Gotham
+TokenInput.TextSize = 16
+TokenInput.ClearTextOnFocus = false
+TokenInput.Parent = Frame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 8)
+InputCorner.Parent = TokenInput
+
+local ConnectButton = Instance.new("TextButton")
+ConnectButton.Size = UDim2.new(1, -20, 0, 36)
+ConnectButton.Position = UDim2.new(0, 10, 0, 98)
+ConnectButton.BackgroundColor3 = Color3.fromRGB(0, 170, 85)
+ConnectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConnectButton.Text = "Connect"
+ConnectButton.Font = Enum.Font.GothamBold
+ConnectButton.TextSize = 16
+ConnectButton.AutoButtonColor = true
+ConnectButton.Parent = Frame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 8)
+ButtonCorner.Parent = ConnectButton
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -20, 0, 24)
+StatusLabel.Position = UDim2.new(0, 10, 0, 142)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = ""
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 14
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.Parent = Frame
+
+local AFKTY = nil
+
+local function trim(s)
+	return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+local connecting = false
+
+ConnectButton.MouseButton1Click:Connect(function()
+	if connecting then
+		return
+	end
+	local token = trim(TokenInput.Text or "")
+	if token == "" then
+		StatusLabel.Text = "Please enter your token"
+		return
+	end
+	token = token:upper()
+	if #token ~= 6 then
+		StatusLabel.Text = "Invalid token format"
+		return
+	end
+	if type(getgenv) == "function" then
+		local g = getgenv()
+		g.AFKTY_SAVED_TOKEN = token
+		g.AFKTY_ORIG_PLACEID = game.PlaceId
+	end
+	connecting = true
+	ConnectButton.AutoButtonColor = false
+	ConnectButton.Text = "Connecting..."
+	TokenInput.Active = false
+	ConnectButton.Active = false
+	local function tryLoadSDK()
+		local urls = {
+			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
+			"https://api.afkty.com/sdk/v3"
+		}
+		local lastErr = ""
+		if type(loadstring) ~= "function" then
+			lastErr = "loadstring unavailable"
+			return nil, lastErr
+		end
+		local function compile(body)
+			local lf = loadstring(body)
+			if not lf then
+				return nil, "failed to compile SDK"
+			end
+			local ok, res = pcall(lf)
+			if ok and res ~= nil then
+				return res, nil
+			end
+			return nil, tostring(res)
+		end
+		for _, url in ipairs(urls) do
+			local ok1, res1 = pcall(function()
+				return loadstring(game:HttpGet(url))()
+			end)
+			if ok1 and res1 ~= nil then
+				return res1, nil
+			end
+			local ok2, raw = pcall(function()
+				return game:HttpGetAsync(url)
+			end)
+			if ok2 and type(raw) == "string" and #raw > 0 then
+				local res3, err3 = compile(raw)
+				if res3 then
+					return res3, nil
+				else
+					lastErr = err3
+				end
+			end
+			local requestFns = {}
+			if syn and syn.request then
+				table.insert(requestFns, syn.request)
+			end
+			if type(http_request) == "function" then
+				table.insert(requestFns, http_request)
+			end
+			if type(request) == "function" then
+				table.insert(requestFns, request)
+			end
+			for _, rf in ipairs(requestFns) do
+				local okr, resp = pcall(function()
+					return rf({Url = url, Method = "GET"})
+				end)
+				if okr and resp then
+					local code = resp.StatusCode or resp.status_code or resp.status
+					local body = resp.Body or resp.body
+					if code == 200 and type(body) == "string" and #body > 0 then
+						local res5, err5 = compile(body)
+						if res5 then
+							return res5, nil
+						else
+							lastErr = err5
+						end
+					else
+						lastErr = "http " .. tostring(code)
+					end
+				end
+			end
+		end
+		return nil, lastErr
+	end
+	local sdkErr
+	AFKTY, sdkErr = tryLoadSDK()
+	if not AFKTY then
+		StatusLabel.Text = "SDK load failed: " .. (sdkErr or "unknown")
+		ConnectButton.AutoButtonColor = true
+		ConnectButton.Text = "Connect"
+		TokenInput.Active = true
+		ConnectButton.Active = true
+		connecting = false
+		return
+	end
+	if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
+		AFKTY.OnConnected:Connect(function()
+			StatusLabel.Text = "Connected"
+			ConnectButton.Text = "Connected"
+		end)
+	end
+	if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
+		AFKTY.OnDisconnected:Connect(function()
+			StatusLabel.Text = "Disconnected, reconnecting..."
+			ConnectButton.Text = "Reconnecting..."
+			spawn(function()
+				local deadline = tick() + 15
+				local reconnected = false
+				while tick() < deadline do
+					local okConn, isConn = pcall(function()
+						return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+					end)
+					if okConn and isConn then
+						reconnected = true
+						break
+					end
+					wait(0.5)
+				end
+				if not reconnected then
+					StatusLabel.Text = "Disconnected for 15s"
+					ConnectButton.Text = "Reconnect"
+					TokenInput.Active = true
+					ConnectButton.Active = true
+					ConnectButton.AutoButtonColor = true
+					connecting = false
+					pcall(function()
+						StarterGui:SetCore("SendNotification", {
+							Title = "AFKTY",
+							Text = "Disconnected and did not reconnect in 15s",
+							Duration = 5
+						})
+					end)
+					if AFKTY and AFKTY.Notify then
+						pcall(function()
+							AFKTY:Notify("Disconnected", "Did not reconnect in 15s")
+						end)
+					elseif AFKTY and AFKTY.Alert then
+						pcall(function()
+							AFKTY:Alert("Disconnected > 15s")
+						end)
+					end
+				end
+			end)
+		end)
+	end
+	if AFKTY.OnError and AFKTY.OnError.Connect then
+		AFKTY.OnError:Connect(function(data)
+			local msg = ""
+			if typeof(data) == "table" then
+				msg = tostring(data.message or data.code or "Error")
+			else
+				msg = tostring(data)
+			end
+			StatusLabel.Text = msg
+		end)
+	end
+	if type(AFKTY) == "function" then
+		local okf, resf = pcall(function() return AFKTY() end)
+		if okf and type(resf) == "table" then
+			AFKTY = resf
+		end
+	end
+	local cfg = {
+		userToken = token,
+		autoReconnect = true,
+		heartbeatInterval = 10000,
+		hubKey = HUB_KEY
+	}
+	local errInit = nil
+	local okInit = false
+	local methods = {"Init","Initialize","Connect","Start"}
+	for _, m in ipairs(methods) do
+		if AFKTY[m] then
+			local ok, err = pcall(function() AFKTY[m](AFKTY, cfg) end)
+			if ok then
+				okInit = true
+				break
+			else
+				errInit = err
+			end
+		end
+	end
+	if not okInit then
+		local msg = "Init failed"
+		if errInit then
+			msg = msg .. ": " .. tostring(errInit)
+		end
+		if not cfg.hubKey and errInit and tostring(errInit):lower():find("hub") then
+			msg = "Hub key required"
+		end
+		StatusLabel.Text = msg
+		ConnectButton.Text = "Connect"
+		TokenInput.Active = true
+		ConnectButton.Active = true
+		ConnectButton.AutoButtonColor = true
+		connecting = false
+		return
+	end
+	queueReexec()
+	spawn(function()
+		local deadline = tick() + 15
+		while tick() < deadline do
+			local okConn, isConn = pcall(function()
+				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+			end)
+			if okConn and isConn then
+				return
+			end
+			wait(0.5)
+		end
+		if not (AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()) then
+			StatusLabel.Text = "Connection timeout"
+			ConnectButton.Text = "Connect"
+			TokenInput.Active = true
+			ConnectButton.Active = true
+			ConnectButton.AutoButtonColor = true
+			connecting = false
+		end
+	end)
+end)
