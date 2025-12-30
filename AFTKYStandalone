@@ -11,8 +11,7 @@ local function queueReexec()
 	local code = [[
 task.wait(5)
 local urls = {
-	"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
-	"https://api.afkty.com/sdk/v3"
+	"https://github.com/alphavalto-svg/AFKTY/blob/main/AFTKYStandalone",
 }
 local function compile(body)
 	local f = loadstring(body)
@@ -167,7 +166,6 @@ ConnectButton.MouseButton1Click:Connect(function()
 	local function tryLoadSDK()
 		local urls = {
 			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau",
-			"https://api.afkty.com/sdk/v3"
 		}
 		local lastErr = ""
 		if type(loadstring) ~= "function" then
