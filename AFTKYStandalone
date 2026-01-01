@@ -69,19 +69,33 @@ end
 local guiBody = fetchGUI()
 if type(guiBody)=="string" and #guiBody>0 then
 	print("[AFKTY] GUI length (bootstrap):", #guiBody)
-	local okCompile, gf = pcall(loadstring, guiBody)
+	local ld = loadstring or load
+	local gf = nil
+	if type(ld) == "function" then
+		local okCompile, fn = pcall(ld, guiBody)
+		if okCompile and type(fn) == "function" then
+			gf = fn
+		end
+	end
 	if gf then
 		print("[AFKTY] running GUI script (bootstrap)")
 		pcall(gf)
 	else
-		print("[AFKTY] GUI compile failed (bootstrap)", okCompile)
+		print("[AFKTY] GUI compile failed (bootstrap)")
 	end
 else
 	print("[AFKTY] GUI fetch failed (bootstrap):", false, "nil", 0)
 end
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
-	local lf = loadstring(body)
+	local ld2 = loadstring or load
+	local lf = nil
+	if type(ld2) == "function" then
+		local okc, fn = pcall(ld2, body)
+		if okc and type(fn) == "function" then
+			lf = fn
+		end
+	end
 	if lf then
 		local okRun, res = pcall(lf)
 		local AFKTY = res
@@ -124,19 +138,33 @@ local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
 local queuedGuiBody = fetchGUI()
 if type(queuedGuiBody)=="string" and #queuedGuiBody>0 then
 	print("[AFKTY] GUI length (queued):", #queuedGuiBody)
-	local okCompile, gf = pcall(loadstring, queuedGuiBody)
+	local ld = loadstring or load
+	local gf = nil
+	if type(ld) == "function" then
+		local okCompile, fn = pcall(ld, queuedGuiBody)
+		if okCompile and type(fn) == "function" then
+			gf = fn
+		end
+	end
 	if gf then
 		print("[AFKTY] running queued GUI script")
 		pcall(gf)
 	else
-		print("[AFKTY] GUI compile failed (queued)", okCompile)
+		print("[AFKTY] GUI compile failed (queued)")
 	end
 else
 	print("[AFKTY] GUI fetch failed (queued):", false, "nil", 0)
 end
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
-	local lf = loadstring(body)
+	local ld2 = loadstring or load
+	local lf = nil
+	if type(ld2) == "function" then
+		local okc, fn = pcall(ld2, body)
+		if okc and type(fn) == "function" then
+			lf = fn
+		end
+	end
 	if lf then
 		local okRun, res = pcall(lf)
 		local AFKTY = res
@@ -422,16 +450,16 @@ ConnectButton.MouseButton1Click:Connect(function()
 			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau"
 		}
 		local lastErr = ""
-		if type(loadstring) ~= "function" then
-			lastErr = "loadstring unavailable"
-			return nil, lastErr
-		end
 		local function compile(body)
-			local lf = loadstring(body)
-			if not lf then
-				return nil, "failed to compile SDK"
+			local loader = loadstring or load
+			if type(loader) ~= "function" then
+				return nil, "loader unavailable"
 			end
-			local ok, res = pcall(lf)
+			local okc, fn = pcall(loader, body)
+			if not okc or type(fn) ~= "function" then
+				return nil, "compile failed"
+			end
+			local ok, res = pcall(fn)
 			if ok and res ~= nil then
 				return res, nil
 			end
@@ -439,7 +467,16 @@ ConnectButton.MouseButton1Click:Connect(function()
 		end
 		for _, url in ipairs(urls) do
 			local ok1, res1 = pcall(function()
-				return loadstring(game:HttpGet(url))()
+				local loader = loadstring or load
+				if type(loader) ~= "function" then
+					error("loader unavailable")
+				end
+				local raw = game:HttpGet(url)
+				local okc, fn = pcall(loader, raw)
+				if not okc or type(fn) ~= "function" then
+					error("compile failed")
+				end
+				return fn()
 			end)
 			if ok1 and res1 ~= nil then
 				return res1, nil
@@ -647,11 +684,15 @@ spawn(function()
 			local token = fileToken
 			connecting = true
 			local function compile(body)
-				local lf = loadstring(body)
-				if not lf then
-					return nil, "failed to compile SDK"
+				local loader = loadstring or load
+				if type(loader) ~= "function" then
+					return nil, "loader unavailable"
 				end
-				local ok, res = pcall(lf)
+				local okc, fn = pcall(loader, body)
+				if not okc or type(fn) ~= "function" then
+					return nil, "compile failed"
+				end
+				local ok, res = pcall(fn)
 				if ok and res ~= nil then
 					return res, nil
 				end
@@ -662,13 +703,18 @@ spawn(function()
 					"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau"
 				}
 				local lastErr = ""
-				if type(loadstring) ~= "function" then
-					lastErr = "loadstring unavailable"
-					return nil, lastErr
-				end
 				for _, url in ipairs(urls) do
 					local ok1, res1 = pcall(function()
-						return loadstring(game:HttpGet(url))()
+						local loader = loadstring or load
+						if type(loader) ~= "function" then
+							error("loader unavailable")
+						end
+						local raw = game:HttpGet(url)
+						local okc, fn = pcall(loader, raw)
+						if not okc or type(fn) ~= "function" then
+							error("compile failed")
+						end
+						return fn()
 					end)
 					if ok1 and res1 ~= nil then
 						return res1, nil
