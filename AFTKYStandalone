@@ -34,10 +34,13 @@ if token == "" then
 end
 local okGui, guiBody = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone") end)
 if okGui and type(guiBody)=="string" and #guiBody>0 then
-	local gf = loadstring(guiBody)
+	print("[AFKTY] GUI length (bootstrap):", #guiBody)
+	local okCompile, gf = pcall(loadstring, guiBody)
 	if gf then
 		print("[AFKTY] running GUI script (bootstrap)")
 		pcall(gf)
+	else
+		print("[AFKTY] GUI compile failed (bootstrap)", okCompile)
 	end
 else
 	print("[AFKTY] GUI fetch failed (bootstrap):", okGui, type(guiBody), #(tostring(guiBody or "")))
@@ -86,10 +89,13 @@ end
 local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
 local okGui, guiBody = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone") end)
 if okGui and type(guiBody)=="string" and #guiBody>0 then
-	local gf = loadstring(guiBody)
+	print("[AFKTY] GUI length (queued):", #guiBody)
+	local okCompile, gf = pcall(loadstring, guiBody)
 	if gf then
 		print("[AFKTY] running queued GUI script")
 		pcall(gf)
+	else
+		print("[AFKTY] GUI compile failed (queued)", okCompile)
 	end
 else
 	print("[AFKTY] GUI fetch failed (queued):", okGui, type(guiBody), #(tostring(guiBody or "")))
