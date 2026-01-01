@@ -65,6 +65,12 @@ if okBody and type(body)=="string" and #body>0 then
 					pcall(function() AFKTY:Disconnect("Session closed") end)
 				end)
 			end
+			local okConn, isConn = pcall(function()
+				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+			end)
+			if not (okConn and isConn) then
+				pcall(function() AFKTY:Disconnect("Not connected") end)
+			end
 		end
 	end
 end
@@ -116,6 +122,12 @@ if okBody and type(body)=="string" and #body>0 then
 					pcall(function() AFKTY:Alert("Disconnected") end)
 					pcall(function() AFKTY:Disconnect("Session closed") end)
 				end)
+			end
+			local okConn, isConn = pcall(function()
+				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+			end)
+			if not (okConn and isConn) then
+				pcall(function() AFKTY:Disconnect("Not connected") end)
 			end
 		end
 	end
@@ -459,6 +471,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 			ConnectButton.Text = "Disconnected"
 			pcall(function() AFKTY:SetStatus("Disconnected") end)
 			pcall(function() AFKTY:Alert("Disconnected") end)
+			pcall(function() AFKTY:Disconnect("Session closed") end)
 			connecting = false
 			TokenInput.Active = true
 			ConnectButton.Active = true
@@ -517,6 +530,12 @@ ConnectButton.MouseButton1Click:Connect(function()
 		ConnectButton.AutoButtonColor = true
 		connecting = false
 		return
+	end
+	local okConn, isConn = pcall(function()
+		return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+	end)
+	if not (okConn and isConn) then
+		pcall(function() AFKTY:Disconnect("Not connected") end)
 	end
 	queueReexec()
 end)
@@ -631,6 +650,7 @@ spawn(function()
 					ConnectButton.Text = "Disconnected"
 					pcall(function() AFKTY:SetStatus("Disconnected") end)
 					pcall(function() AFKTY:Alert("Disconnected") end)
+					pcall(function() AFKTY:Disconnect("Session closed") end)
 					connecting = false
 					TokenInput.Active = true
 					ConnectButton.Active = true
@@ -655,6 +675,12 @@ spawn(function()
 					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
 					if ok then break end
 				end
+			end
+			local okConn, isConn = pcall(function()
+				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+			end)
+			if not (okConn and isConn) then
+				pcall(function() AFKTY:Disconnect("Not connected") end)
 			end
 			queueReexec()
 		end
