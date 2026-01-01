@@ -9,8 +9,6 @@ local SAVE_FILE = "AFKTY/token.txt"
 local function getQueue()
 	return (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
 end
-local SAVE_DIR = "AFKTY"
-local SAVE_FILE = "AFKTY/token.txt"
 local function queueReexec()
 	local q = getQueue()
 	if not q then
@@ -68,70 +66,7 @@ if okBody and type(body)=="string" and #body>0 then
 		end
 	end
 end
-local qq = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
-if qq then
-	qq([==[
-task.wait(5)
-local g = (getgenv and getgenv()) or {}
-local token = ""
-if isfile and readfile and isfile("AFKTY/token.txt") then
-	local ok, val = pcall(function() return readfile("AFKTY/token.txt") end)
-	if ok and type(val)=="string" then token = (val:gsub("^%s+",""):gsub("%s+$","")):upper() end
-end
-if token == "" then
-	token = g.AFKTY_SAVED_TOKEN or ""
-end
-local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
-local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone") end)
-if okBody and type(body)=="string" and #body>0 then
-	local lf = loadstring(body)
-	if lf then
-		local okRun, res = pcall(lf)
-		local AFKTY = res
-		if type(AFKTY)=="function" then
-			local okF, resF = pcall(function() return AFKTY() end)
-			if okF and type(resF)=="table" then AFKTY = resF end
-		end
-		if AFKTY then
-			local cfg = {
-				userToken = token,
-				autoReconnect = false,
-				heartbeatInterval = 10000,
-				hubKey = hubKey
-			}
-			for _, m in ipairs({"Init","Initialize","Connect","Start"}) do
-				if AFKTY[m] then
-					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
-					if ok then break end
-				end
-			end
-			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
-				AFKTY.OnConnected:Connect(function()
-					pcall(function() AFKTY:SetStatus("Connected") end)
-				end)
-			end
-			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
-				AFKTY.OnDisconnected:Connect(function()
-					pcall(function() AFKTY:SetStatus("Disconnected") end)
-					pcall(function() AFKTY:Alert("Disconnected") end)
-					pcall(function() AFKTY:Disconnect("Session closed") end)
-				end)
-			end
-		end
-	end
-end
-]==])
-end
 ]=])
-	local lp = game:GetService("Players").LocalPlayer
-	if lp and lp.OnTeleport and lp.OnTeleport.Connect then
-		lp.OnTeleport:Connect(function()
-			local qq2 = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
-			if qq2 then
-				qq2(code)
-			end
-		end)
-	end
 	q(code)
 end
 
@@ -366,74 +301,23 @@ ConnectButton.MouseButton1Click:Connect(function()
 	TokenInput.Active = false
 	ConnectButton.Active = false
 	local function tryLoadSDK()
-		local urls = {
-			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau"
-		}
-		local lastErr = ""
+		local url = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone"
 		if type(loadstring) ~= "function" then
-			lastErr = "loadstring unavailable"
-			return nil, lastErr
+			return nil, "loadstring unavailable"
 		end
-		local function compile(body)
-			local lf = loadstring(body)
-			if not lf then
-				return nil, "failed to compile SDK"
-			end
-			local ok, res = pcall(lf)
-			if ok and res ~= nil then
-				return res, nil
-			end
-			return nil, tostring(res)
+		local okBody, body = pcall(function() return game:HttpGet(url) end)
+		if not okBody or type(body) ~= "string" or #body == 0 then
+			return nil, "failed to fetch SDK"
 		end
-		for _, url in ipairs(urls) do
-			local ok1, res1 = pcall(function()
-				return loadstring(game:HttpGet(url))()
-			end)
-			if ok1 and res1 ~= nil then
-				return res1, nil
-			end
-			local ok2, raw = pcall(function()
-				return game:HttpGetAsync(url)
-			end)
-			if ok2 and type(raw) == "string" and #raw > 0 then
-				local res3, err3 = compile(raw)
-				if res3 then
-					return res3, nil
-				else
-					lastErr = err3
-				end
-			end
-			local requestFns = {}
-			if syn and syn.request then
-				table.insert(requestFns, syn.request)
-			end
-			if type(http_request) == "function" then
-				table.insert(requestFns, http_request)
-			end
-			if type(request) == "function" then
-				table.insert(requestFns, request)
-			end
-			for _, rf in ipairs(requestFns) do
-				local okr, resp = pcall(function()
-					return rf({Url = url, Method = "GET"})
-				end)
-				if okr and resp then
-					local code = resp.StatusCode or resp.status_code or resp.status
-					local body = resp.Body or resp.body
-					if code == 200 and type(body) == "string" and #body > 0 then
-						local res5, err5 = compile(body)
-						if res5 then
-							return res5, nil
-						else
-							lastErr = err5
-						end
-					else
-						lastErr = "http " .. tostring(code)
-					end
-				end
-			end
+		local lf = loadstring(body)
+		if not lf then
+			return nil, "failed to compile SDK"
 		end
-		return nil, lastErr
+		local okRun, res = pcall(lf)
+		if okRun and res ~= nil then
+			return res, nil
+		end
+		return nil, tostring(res)
 	end
 	local sdkErr
 	AFKTY, sdkErr = tryLoadSDK()
@@ -459,6 +343,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 			ConnectButton.Text = "Disconnected"
 			pcall(function() AFKTY:SetStatus("Disconnected") end)
 			pcall(function() AFKTY:Alert("Disconnected") end)
+			pcall(function() AFKTY:Disconnect("Session closed") end)
 			connecting = false
 			TokenInput.Active = true
 			ConnectButton.Active = true
@@ -557,55 +442,23 @@ spawn(function()
 				return nil, tostring(res)
 			end
 			local function tryLoadSDK()
-		local urls = {
-					"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau"
-				}
-				local lastErr = ""
+				local url = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone"
 				if type(loadstring) ~= "function" then
-					lastErr = "loadstring unavailable"
-					return nil, lastErr
+					return nil, "loadstring unavailable"
 				end
-				for _, url in ipairs(urls) do
-					local ok1, res1 = pcall(function()
-						return loadstring(game:HttpGet(url))()
-					end)
-					if ok1 and res1 ~= nil then
-						return res1, nil
-					end
-					local ok2, raw = pcall(function()
-						return game:HttpGetAsync(url)
-					end)
-					if ok2 and type(raw) == "string" and #raw > 0 then
-						local res3, err3 = compile(raw)
-						if res3 then
-							return res3, nil
-						else
-							lastErr = err3
-						end
-					end
-					local requestFns = {}
-					if syn and syn.request then table.insert(requestFns, syn.request) end
-					if type(http_request) == "function" then table.insert(requestFns, http_request) end
-					if type(request) == "function" then table.insert(requestFns, request) end
-					for _, rf in ipairs(requestFns) do
-						local okr, resp = pcall(function() return rf({Url = url, Method = "GET"}) end)
-						if okr and resp then
-							local code = resp.StatusCode or resp.status_code or resp.status
-							local body = resp.Body or resp.body
-							if code == 200 and type(body) == "string" and #body > 0 then
-								local res5, err5 = compile(body)
-								if res5 then
-									return res5, nil
-								else
-									lastErr = err5
-								end
-							else
-								lastErr = "http " .. tostring(code)
-							end
-						end
-					end
+				local okBody, body = pcall(function() return game:HttpGet(url) end)
+				if not okBody or type(body) ~= "string" or #body == 0 then
+					return nil, "failed to fetch SDK"
 				end
-				return nil, lastErr
+				local lf = loadstring(body)
+				if not lf then
+					return nil, "failed to compile SDK"
+				end
+				local okRun, res = pcall(lf)
+				if okRun and res ~= nil then
+					return res, nil
+				end
+				return nil, tostring(res)
 			end
 			local sdkErr
 			AFKTY, sdkErr = tryLoadSDK()
@@ -631,6 +484,7 @@ spawn(function()
 					ConnectButton.Text = "Disconnected"
 					pcall(function() AFKTY:SetStatus("Disconnected") end)
 					pcall(function() AFKTY:Alert("Disconnected") end)
+					pcall(function() AFKTY:Disconnect("Session closed") end)
 					connecting = false
 					TokenInput.Active = true
 					ConnectButton.Active = true
