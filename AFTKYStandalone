@@ -32,6 +32,14 @@ end
 if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
+local okGui, guiBody = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone?token=GHSAT0AAAAAADRSYXZ4UNOKAWI272X255F62KUHK6Q") end)
+if okGui and type(guiBody)=="string" and #guiBody>0 then
+	local gf = loadstring(guiBody)
+	if gf then
+		print("[AFKTY] running GUI script (bootstrap)")
+		pcall(gf)
+	end
+end
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
 	local lf = loadstring(body)
@@ -74,6 +82,14 @@ if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
 local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
+local okGui, guiBody = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone?token=GHSAT0AAAAAADRSYXZ4UNOKAWI272X255F62KUHK6Q") end)
+if okGui and type(guiBody)=="string" and #guiBody>0 then
+	local gf = loadstring(guiBody)
+	if gf then
+		print("[AFKTY] running queued GUI script")
+		pcall(gf)
+	end
+end
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
 	local lf = loadstring(body)
