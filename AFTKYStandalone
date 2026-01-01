@@ -20,6 +20,8 @@ local function queueReexec()
 if not game:IsLoaded() then game.Loaded:Wait() end
 repeat task.wait() until game:GetService("Players").LocalPlayer
 task.wait(1)
+print("[AFKTY] bootstrap start")
+pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title="AFKTY",Text="Bootstrap running",Duration=2}) end)
 local g = (getgenv and getgenv()) or {}
 g.AFKTY_HUB_KEY = "]=] .. HUB_KEY .. [=["
 local token = ""
@@ -60,6 +62,8 @@ local qq = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_t
 if qq then
 	qq([==[
 task.wait(5)
+print("[AFKTY] queued start")
+pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title="AFKTY",Text="Queued code running",Duration=2}) end)
 local g = (getgenv and getgenv()) or {}
 local token = ""
 if isfile and readfile and isfile("AFKTY/token.txt") then
@@ -93,10 +97,14 @@ if okBody and type(body)=="string" and #body>0 then
 					if ok then break end
 				end
 			end
+			print("[AFKTY] queued init ok")
+			pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title="AFKTY",Text="Queued init ok",Duration=2}) end)
 		end
 	end
 end
 ]==])
+	pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title="AFKTY",Text="Queued for teleport",Duration=2}) end)
+	print("[AFKTY] queued for teleport")
 end
 ]=])
 	local lp = game:GetService("Players").LocalPlayer
@@ -107,6 +115,8 @@ end
 				qq2(code)
 			end
 		end)
+		print("[AFKTY] OnTeleport hook attached")
+		pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title="AFKTY",Text="OnTeleport hook attached",Duration=2}) end)
 	end
 	q(code)
 end
