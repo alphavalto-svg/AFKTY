@@ -16,12 +16,12 @@ local function queueReexec()
 	if not q then
 		return
 	end
-	local code = [[
+	local code = ([=[
 if not game:IsLoaded() then game.Loaded:Wait() end
 repeat task.wait() until game:GetService("Players").LocalPlayer
 task.wait(1)
 local g = (getgenv and getgenv()) or {}
-g.AFKTY_HUB_KEY = "]] .. HUB_KEY .. [["
+g.AFKTY_HUB_KEY = "]=] .. HUB_KEY .. [=["
 local token = ""
 if isfile and readfile and isfile("AFKTY/token.txt") then
 	local ok, val = pcall(function() return readfile("AFKTY/token.txt") end)
@@ -45,7 +45,7 @@ if okBody and type(body)=="string" and #body>0 then
 				userToken = token,
 				autoReconnect = true,
 				heartbeatInterval = 10000,
-				hubKey = "]] .. HUB_KEY .. [["
+				hubKey = "]=] .. HUB_KEY .. [=["
 			}
 			for _, m in ipairs({"Init","Initialize","Connect","Start"}) do
 				if AFKTY[m] then
@@ -58,7 +58,7 @@ if okBody and type(body)=="string" and #body>0 then
 end
 local qq = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
 if qq then
-	qq([=[
+	qq([==[
 task.wait(5)
 local g = (getgenv and getgenv()) or {}
 local token = ""
@@ -69,7 +69,7 @@ end
 if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
-local hubKey = g.AFKTY_HUB_KEY or ""
+local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
 	local lf = loadstring(body)
@@ -96,9 +96,18 @@ if okBody and type(body)=="string" and #body>0 then
 		end
 	end
 end
-]=])
+]==])
 end
-]]
+]=])
+	local lp = game:GetService("Players").LocalPlayer
+	if lp and lp.OnTeleport and lp.OnTeleport.Connect then
+		lp.OnTeleport:Connect(function()
+			local qq2 = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
+			if qq2 then
+				qq2(code)
+			end
+		end)
+	end
 	q(code)
 end
 
