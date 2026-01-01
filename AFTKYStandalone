@@ -343,7 +343,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 	ConnectButton.Active = false
 	local function tryLoadSDK()
 		local urls = {
-			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau"
+			"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone"
 		}
 		local lastErr = ""
 		if type(loadstring) ~= "function" then
