@@ -3,6 +3,39 @@ local LocalPlayer = Players.LocalPlayer
 local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
 local HUB_KEY = "hub_live_6812bd621eb9953eee0b5421ad25db77c7fcd9aea475bceb"
 QUEUE_URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFKTYStandalone.lua"
+local GUI_URLS = {
+	QUEUE_URL,
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFKTYStandalone",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFKTYStandalone.lua",
+	"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFKTYStandalone"
+}
+local function fetchGUI()
+	for _, url in ipairs(GUI_URLS) do
+		local ok1, body1 = pcall(function() return game:HttpGet(url) end)
+		if ok1 and type(body1) == "string" and #body1 > 0 and not tostring(body1):lower():find("<!doctype") then
+			return body1
+		end
+		local ok2, body2 = pcall(function() return game:HttpGetAsync(url) end)
+		if ok2 and type(body2) == "string" and #body2 > 0 and not tostring(body2):lower():find("<!doctype") then
+			return body2
+		end
+		local reqFns = {}
+		if syn and syn.request then table.insert(reqFns, syn.request) end
+		if type(http_request) == "function" then table.insert(reqFns, http_request) end
+		if type(request) == "function" then table.insert(reqFns, request) end
+		for _, rf in ipairs(reqFns) do
+			local okr, resp = pcall(function() return rf({Url = url, Method = "GET"}) end)
+			if okr and resp then
+				local code = resp.StatusCode or resp.status_code or resp.status
+				local b = resp.Body or resp.body
+				if (code == 200 or code == 302 or code == 304) and type(b) == "string" and #b > 0 and not tostring(b):lower():find("<!doctype") then
+					return b
+				end
+			end
+		end
+	end
+	return nil
+end
  
 local SAVE_DIR = "AFKTY"
 local SAVE_FILE = "AFKTY/token.txt"
@@ -33,8 +66,8 @@ end
 if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
-local okGui, guiBody = pcall(function() return game:HttpGet(QUEUE_URL) end)
-if okGui and type(guiBody)=="string" and #guiBody>0 then
+local guiBody = fetchGUI()
+if type(guiBody)=="string" and #guiBody>0 then
 	print("[AFKTY] GUI length (bootstrap):", #guiBody)
 	local okCompile, gf = pcall(loadstring, guiBody)
 	if gf then
@@ -44,34 +77,7 @@ if okGui and type(guiBody)=="string" and #guiBody>0 then
 		print("[AFKTY] GUI compile failed (bootstrap)", okCompile)
 	end
 else
-	print("[AFKTY] GUI fetch failed (bootstrap):", okGui, type(guiBody), #(tostring(guiBody or "")))
-	-- fallback via http_request/syn.request if available
-	local body = nil
-	local reqFns = {}
-	if syn and syn.request then table.insert(reqFns, syn.request) end
-	if type(http_request) == "function" then table.insert(reqFns, http_request) end
-	if type(request) == "function" then table.insert(reqFns, request) end
-	for _, rf in ipairs(reqFns) do
-		local okr, resp = pcall(function() return rf({Url = QUEUE_URL, Method = "GET"}) end)
-		if okr and resp then
-			local code = resp.StatusCode or resp.status_code or resp.status
-			local b = resp.Body or resp.body
-			if code == 200 and type(b) == "string" and #b > 0 then
-				body = b
-				break
-			end
-		end
-	end
-	if body then
-		print("[AFKTY] GUI fetched via request (bootstrap):", #body)
-		local okCompile, gf = pcall(loadstring, body)
-		if gf then
-			print("[AFKTY] running GUI script (bootstrap, request)")
-			pcall(gf)
-		else
-			print("[AFKTY] GUI compile failed (bootstrap, request)", okCompile)
-		end
-	end
+	print("[AFKTY] GUI fetch failed (bootstrap):", false, "nil", 0)
 end
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
@@ -115,10 +121,10 @@ if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
 local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
-local okGui, guiBody = pcall(function() return game:HttpGet(QUEUE_URL) end)
-if okGui and type(guiBody)=="string" and #guiBody>0 then
-	print("[AFKTY] GUI length (queued):", #guiBody)
-	local okCompile, gf = pcall(loadstring, guiBody)
+local queuedGuiBody = fetchGUI()
+if type(queuedGuiBody)=="string" and #queuedGuiBody>0 then
+	print("[AFKTY] GUI length (queued):", #queuedGuiBody)
+	local okCompile, gf = pcall(loadstring, queuedGuiBody)
 	if gf then
 		print("[AFKTY] running queued GUI script")
 		pcall(gf)
@@ -126,33 +132,7 @@ if okGui and type(guiBody)=="string" and #guiBody>0 then
 		print("[AFKTY] GUI compile failed (queued)", okCompile)
 	end
 else
-	print("[AFKTY] GUI fetch failed (queued):", okGui, type(guiBody), #(tostring(guiBody or "")))
-	local body = nil
-	local reqFns = {}
-	if syn and syn.request then table.insert(reqFns, syn.request) end
-	if type(http_request) == "function" then table.insert(reqFns, http_request) end
-	if type(request) == "function" then table.insert(reqFns, request) end
-	for _, rf in ipairs(reqFns) do
-		local okr, resp = pcall(function() return rf({Url = QUEUE_URL, Method = "GET"}) end)
-		if okr and resp then
-			local code = resp.StatusCode or resp.status_code or resp.status
-			local b = resp.Body or resp.body
-			if code == 200 and type(b) == "string" and #b > 0 then
-				body = b
-				break
-			end
-		end
-	end
-	if body then
-		print("[AFKTY] GUI fetched via request (queued):", #body)
-		local okCompile, gf = pcall(loadstring, body)
-		if gf then
-			print("[AFKTY] running queued GUI script (request)")
-			pcall(gf)
-		else
-			print("[AFKTY] GUI compile failed (queued, request)", okCompile)
-		end
-	end
+	print("[AFKTY] GUI fetch failed (queued):", false, "nil", 0)
 end
 local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
 if okBody and type(body)=="string" and #body>0 then
@@ -212,7 +192,13 @@ do
 	if syn and syn.protect_gui then
 		syn.protect_gui(ScreenGui)
 	end
-	ScreenGui.Parent = parentGui
+	local ok = pcall(function() ScreenGui.Parent = parentGui end)
+	if not ok then
+		local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
+		if pg then
+			ScreenGui.Parent = pg
+		end
+	end
 end
 
 local Frame = Instance.new("Frame")
