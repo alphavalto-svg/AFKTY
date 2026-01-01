@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
 local HUB_KEY = "hub_live_6812bd621eb9953eee0b5421ad25db77c7fcd9aea475bceb"
-local QUEUE_URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone?token=GHSAT0AAAAAADRSYXZ4UNOKAWI272X255F62KUHK6Q"
+QUEUE_URL = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/main/AFKTYStandalone.lua"
  
 local SAVE_DIR = "AFKTY"
 local SAVE_FILE = "AFKTY/token.txt"
