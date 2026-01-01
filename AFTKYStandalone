@@ -43,7 +43,7 @@ if okBody and type(body)=="string" and #body>0 then
 		if AFKTY then
 			local cfg = {
 				userToken = token,
-				autoReconnect = true,
+				autoReconnect = false,
 				heartbeatInterval = 10000,
 				hubKey = "]=] .. HUB_KEY .. [=["
 			}
@@ -62,19 +62,7 @@ if okBody and type(body)=="string" and #body>0 then
 				AFKTY.OnDisconnected:Connect(function()
 					pcall(function() AFKTY:SetStatus("Disconnected") end)
 					pcall(function() AFKTY:Alert("Disconnected") end)
-					spawn(function()
-						local deadline = tick() + 15
-						while tick() < deadline do
-							local okConn, isConn = pcall(function()
-								return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-							end)
-							if okConn and isConn then
-								pcall(function() AFKTY:SetStatus("Reconnected") end)
-								break
-							end
-							wait(0.5)
-						end
-					end)
+					pcall(function() AFKTY:Disconnect("Session closed") end)
 				end)
 			end
 		end
@@ -107,7 +95,7 @@ if okBody and type(body)=="string" and #body>0 then
 		if AFKTY then
 			local cfg = {
 				userToken = token,
-				autoReconnect = true,
+				autoReconnect = false,
 				heartbeatInterval = 10000,
 				hubKey = hubKey
 			}
@@ -126,19 +114,7 @@ if okBody and type(body)=="string" and #body>0 then
 				AFKTY.OnDisconnected:Connect(function()
 					pcall(function() AFKTY:SetStatus("Disconnected") end)
 					pcall(function() AFKTY:Alert("Disconnected") end)
-					spawn(function()
-						local deadline = tick() + 15
-						while tick() < deadline do
-							local okConn, isConn = pcall(function()
-								return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-							end)
-							if okConn and isConn then
-								pcall(function() AFKTY:SetStatus("Reconnected") end)
-								break
-							end
-							wait(0.5)
-						end
-					end)
+					pcall(function() AFKTY:Disconnect("Session closed") end)
 				end)
 			end
 		end
@@ -479,43 +455,14 @@ ConnectButton.MouseButton1Click:Connect(function()
 	end
 	if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 		AFKTY.OnDisconnected:Connect(function()
-			StatusLabel.Text = "Disconnected, reconnecting..."
-			ConnectButton.Text = "Reconnecting..."
+			StatusLabel.Text = "Disconnected"
+			ConnectButton.Text = "Disconnected"
 			pcall(function() AFKTY:SetStatus("Disconnected") end)
 			pcall(function() AFKTY:Alert("Disconnected") end)
-			spawn(function()
-				local deadline = tick() + 15
-				local reconnected = false
-				while tick() < deadline do
-					local okConn, isConn = pcall(function()
-						return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-					end)
-					if okConn and isConn then
-						reconnected = true
-						pcall(function() AFKTY:SetStatus("Reconnected") end)
-						pcall(function() AFKTY:Notify("Reconnected", "Connection restored") end)
-						break
-					end
-					wait(0.5)
-				end
-				if not reconnected then
-					StatusLabel.Text = "Disconnected for 15s"
-					ConnectButton.Text = "Reconnect"
-					TokenInput.Active = true
-					ConnectButton.Active = true
-					ConnectButton.AutoButtonColor = true
-					connecting = false
-					pcall(function()
-						StarterGui:SetCore("SendNotification", {
-							Title = "AFKTY",
-							Text = "Disconnected and did not reconnect in 15s",
-							Duration = 5
-						})
-					end)
-					pcall(function() AFKTY:Alert("Disconnected > 15s") end)
-					pcall(function() AFKTY:Disconnect("No reconnect in 15s") end)
-				end
-			end)
+			connecting = false
+			TokenInput.Active = true
+			ConnectButton.Active = true
+			ConnectButton.AutoButtonColor = true
 		end)
 	end
 	if AFKTY.OnError and AFKTY.OnError.Connect then
@@ -537,7 +484,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 	end
 	local cfg = {
 		userToken = token,
-		autoReconnect = true,
+		autoReconnect = false,
 		heartbeatInterval = 10000,
 		hubKey = HUB_KEY
 	}
@@ -572,26 +519,6 @@ ConnectButton.MouseButton1Click:Connect(function()
 		return
 	end
 	queueReexec()
-	spawn(function()
-		local deadline = tick() + 15
-		while tick() < deadline do
-			local okConn, isConn = pcall(function()
-				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-			end)
-			if okConn and isConn then
-				return
-			end
-			wait(0.5)
-		end
-		if not (AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()) then
-			StatusLabel.Text = "Connection timeout"
-			ConnectButton.Text = "Connect"
-			TokenInput.Active = true
-			ConnectButton.Active = true
-			ConnectButton.AutoButtonColor = true
-			connecting = false
-		end
-	end)
 end)
 spawn(function()
 	local fileToken = nil
@@ -700,10 +627,14 @@ spawn(function()
 			end
 			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 				AFKTY.OnDisconnected:Connect(function()
-					StatusLabel.Text = "Disconnected, reconnecting..."
-					ConnectButton.Text = "Reconnecting..."
+					StatusLabel.Text = "Disconnected"
+					ConnectButton.Text = "Disconnected"
 					pcall(function() AFKTY:SetStatus("Disconnected") end)
 					pcall(function() AFKTY:Alert("Disconnected") end)
+					connecting = false
+					TokenInput.Active = true
+					ConnectButton.Active = true
+					ConnectButton.AutoButtonColor = true
 				end)
 			end
 			if type(AFKTY) == "function" then
@@ -714,7 +645,7 @@ spawn(function()
 			end
 			local cfg = {
 				userToken = token,
-				autoReconnect = true,
+				autoReconnect = false,
 				heartbeatInterval = 10000,
 				hubKey = HUB_KEY
 			}
