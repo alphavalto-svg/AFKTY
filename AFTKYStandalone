@@ -30,7 +30,7 @@ end
 if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
-local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
+local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone") end)
 if okBody and type(body)=="string" and #body>0 then
 	local lf = loadstring(body)
 	if lf then
@@ -53,6 +53,30 @@ if okBody and type(body)=="string" and #body>0 then
 					if ok then break end
 				end
 			end
+			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
+				AFKTY.OnConnected:Connect(function()
+					pcall(function() AFKTY:SetStatus("Connected") end)
+				end)
+			end
+			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
+				AFKTY.OnDisconnected:Connect(function()
+					pcall(function() AFKTY:SetStatus("Disconnected") end)
+					pcall(function() AFKTY:Alert("Disconnected") end)
+					spawn(function()
+						local deadline = tick() + 15
+						while tick() < deadline do
+							local okConn, isConn = pcall(function()
+								return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+							end)
+							if okConn and isConn then
+								pcall(function() AFKTY:SetStatus("Reconnected") end)
+								break
+							end
+							wait(0.5)
+						end
+					end)
+				end)
+			end
 		end
 	end
 end
@@ -70,7 +94,7 @@ if token == "" then
 	token = g.AFKTY_SAVED_TOKEN or ""
 end
 local hubKey = g.AFKTY_HUB_KEY or "]=] .. HUB_KEY .. [=["
-local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau") end)
+local okBody, body = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone") end)
 if okBody and type(body)=="string" and #body>0 then
 	local lf = loadstring(body)
 	if lf then
@@ -92,6 +116,30 @@ if okBody and type(body)=="string" and #body>0 then
 					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
 					if ok then break end
 				end
+			end
+			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
+				AFKTY.OnConnected:Connect(function()
+					pcall(function() AFKTY:SetStatus("Connected") end)
+				end)
+			end
+			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
+				AFKTY.OnDisconnected:Connect(function()
+					pcall(function() AFKTY:SetStatus("Disconnected") end)
+					pcall(function() AFKTY:Alert("Disconnected") end)
+					spawn(function()
+						local deadline = tick() + 15
+						while tick() < deadline do
+							local okConn, isConn = pcall(function()
+								return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+							end)
+							if okConn and isConn then
+								pcall(function() AFKTY:SetStatus("Reconnected") end)
+								break
+							end
+							wait(0.5)
+						end
+					end)
+				end)
 			end
 		end
 	end
@@ -343,7 +391,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 	ConnectButton.Active = false
 	local function tryLoadSDK()
 		local urls = {
-			"https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone"
+			"https://raw.githubusercontent.com/nouralddin-abdullah/Airlines/refs/heads/main/afkty-v3.luau"
 		}
 		local lastErr = ""
 		if type(loadstring) ~= "function" then
