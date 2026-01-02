@@ -769,6 +769,9 @@ DisconnectButton.MouseButton1Click:Connect(function()
 	ConnectButton.AutoButtonColor = true
 end)
 spawn(function()
+	if Config and Config.REEXEC_ENABLED then
+		return
+	end
 	local fileToken = nil
 	if isfile and readfile and isfile(SAVE_FILE) then
 		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
