@@ -36,6 +36,7 @@ local function loadConfig()
 		end
 	end
 end
+
 loadConfig()
 
 local function getQueue()
@@ -459,10 +460,10 @@ local function makeCell(idx, title)
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = cell
 	local active = false
-	if idx == 1 then active = Config.JOIN_ACTIVE or false end
-	if idx == 2 then active = Config.LEAVE_ACTIVE or false end
-	if idx == 3 then active = Config.CHAT_ACTIVE or false end
-	if idx == 4 then active = Config.REEXEC_ENABLED or false end
+	if idx == 1 then active = Config.JOIN_ACTIVE end
+	if idx == 2 then active = Config.LEAVE_ACTIVE end
+	if idx == 3 then active = Config.CHAT_ACTIVE end
+	if idx == 4 then active = Config.REEXEC_ENABLED end
 	box.Text = active and "X" or ""
 	box.MouseButton1Click:Connect(function()
 		active = not active
@@ -470,24 +471,23 @@ local function makeCell(idx, title)
 		if idx == 1 then Config.JOIN_ACTIVE = active end
 		if idx == 2 then Config.LEAVE_ACTIVE = active end
 		if idx == 3 then Config.CHAT_ACTIVE = active end
-		if idx == 4 then
-			Config.REEXEC_ENABLED = active
+		if idx == 4 then Config.REEXEC_ENABLED = active
 			if active then
 				pcall(function() queueReexec() end)
 			end
 		end
 		local g2 = (getgenv and getgenv()) or {}
-		if idx == 1 then g2.AFKTY_FUNC1_ACTIVE = active end
-		if idx == 2 then g2.AFKTY_FUNC2_ACTIVE = active end
-		if idx == 3 then g2.AFKTY_FUNC3_ACTIVE = active end
-		if idx == 4 then g2.AFKTY_REEXEC_ENABLED = active end
+		if idx == 1 then Config.JOIN_ACTIVE = active end
+		if idx == 2 then Config.LEAVE_ACTIVE = active end
+		if idx == 3 then Config.CHAT_ACTIVE = active end
+		if idx == 4 then Config.REEXEC_ENABLED = active end
 		pcall(function() saveConfig() end)
 	end)
 end
 makeCell(1, "Players Join")
 makeCell(2, "Players Leave")
 makeCell(3, "Chat Log")
-makeCell(4, "Reexecute Automatically")
+makeCell(4, "Reexecute Automatic")
 
 -- Option connections
 do
