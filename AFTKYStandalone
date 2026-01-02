@@ -7,6 +7,7 @@ local GuiService = game:GetService("GuiService")
 local CoreGui = game:GetService("CoreGui")
 local SAVE_DIR = "AFKTY"
 local SAVE_FILE = "AFKTY/token.txt"
+local SETTINGS_FILE = "AFKTY/options.txt"
 
 local function getQueue()
 	return (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
@@ -18,6 +19,49 @@ do
 		if g.AFKTY_FUNC1_ACTIVE == nil then g.AFKTY_FUNC1_ACTIVE = false end
 		if g.AFKTY_FUNC2_ACTIVE == nil then g.AFKTY_FUNC2_ACTIVE = false end
 		if g.AFKTY_FUNC3_ACTIVE == nil then g.AFKTY_FUNC3_ACTIVE = false end
+	end
+end
+local function loadOptions()
+	local res = {f1=false,f2=false,f3=false,re=false}
+	if isfile and readfile and isfile(SETTINGS_FILE) then
+		local ok, s = pcall(function() return readfile(SETTINGS_FILE) end)
+		if ok and type(s)=="string" and #s>0 then
+			for line in s:gmatch("[^\r\n]+") do
+				local k,v = line:match("^([A-Z0-9_]+)=(%d)$")
+				if k then
+					if k=="FUNC1" then res.f1 = v=="1" end
+					if k=="FUNC2" then res.f2 = v=="1" end
+					if k=="FUNC3" then res.f3 = v=="1" end
+					if k=="REEXEC" then res.re = v=="1" end
+				end
+			end
+		end
+	end
+	return res
+end
+local function saveOptions()
+	local g = (getgenv and getgenv()) or {}
+	local s = table.concat({
+		string.format("FUNC1=%d", g.AFKTY_FUNC1_ACTIVE and 1 or 0),
+		string.format("FUNC2=%d", g.AFKTY_FUNC2_ACTIVE and 1 or 0),
+		string.format("FUNC3=%d", g.AFKTY_FUNC3_ACTIVE and 1 or 0),
+		string.format("REEXEC=%d", g.AFKTY_REEXEC_ENABLED and 1 or 0)
+	}, "\n")
+	if makefolder and isfolder and not isfolder(SAVE_DIR) then
+		pcall(function() makefolder(SAVE_DIR) end)
+	end
+	if writefile then
+		pcall(function() writefile(SETTINGS_FILE, s) end)
+	end
+end
+do
+	local o = loadOptions()
+	if type(getgenv)=="function" then
+		local g = getgenv()
+		g.AFKTY_FUNC1_ACTIVE = o.f1
+		g.AFKTY_FUNC2_ACTIVE = o.f2
+		g.AFKTY_FUNC3_ACTIVE = o.f3
+		g.AFKTY_REEXEC_ENABLED = o.re
 	end
 end
 local function TryLoadSDK()
@@ -454,6 +498,7 @@ local function makeCell(idx, title)
 				pcall(function() queueReexec() end)
 			end
 		end
+		saveOptions()
 	end)
 end
 makeCell(1, "Players Join")
