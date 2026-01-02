@@ -805,9 +805,6 @@ DisconnectButton.MouseButton1Click:Connect(function()
 	ConnectButton.AutoButtonColor = true
 end)
 spawn(function()
-	if Config and Config.REEXEC_ENABLED then
-		return
-	end
 	local fileToken = nil
 	if isfile and readfile and isfile(SAVE_FILE) then
 		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
@@ -823,12 +820,12 @@ spawn(function()
 	end
 	if fileToken and #fileToken==6 then
 		TokenInput.Text = fileToken
-
-		if not connecting then
-			ConnectButton.AutoButtonColor = false
-			ConnectButton.Text = "Connecting..."
-			TokenInput.Active = false
-			ConnectButton.Active = false
+		if connecting then return end
+		if AFKTY and AFKTY.IsConnected and AFKTY:IsConnected() then return end
+		ConnectButton.AutoButtonColor = false
+		ConnectButton.Text = "Connecting..."
+		TokenInput.Active = false
+		ConnectButton.Active = false
 
 			local token = fileToken
 			connecting = true
