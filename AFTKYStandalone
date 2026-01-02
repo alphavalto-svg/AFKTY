@@ -752,6 +752,9 @@ ConnectButton.MouseButton1Click:Connect(function()
 		AFKTY.OnDisconnected:Connect(function()
 			StatusLabel.Text = "Disconnected"
 			ConnectButton.Text = "Connect"
+			pcall(function() AFKTY:SetStatus("Disconnected") end)
+			pcall(function() AFKTY:Alert("Disconnected") end)
+			pcall(function() AFKTY:Disconnect("Session closed") end)
 			connecting = false
 			TokenInput.Active = true
 			ConnectButton.Active = true
@@ -932,6 +935,9 @@ spawn(function()
 		AFKTY.OnDisconnected:Connect(function()
 			StatusLabel.Text = "Disconnected"
 			ConnectButton.Text = "Connect"
+			pcall(function() AFKTY:SetStatus("Disconnected") end)
+			pcall(function() AFKTY:Alert("Disconnected") end)
+			pcall(function() AFKTY:Disconnect("Session closed") end)
 			connecting = false
 			TokenInput.Active = true
 			ConnectButton.Active = true
