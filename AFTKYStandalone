@@ -8,7 +8,7 @@ local CoreGui = game:GetService("CoreGui")
 local CONFIG_FILE = "AFKTY/config.json"
 local Config = {
 	JOIN_ACTIVE = false,
-	Leave_ACTIVE = false,
+	LEAVE_ACTIVE = false,
 	CHAT_ACTIVE = false,
 	REEXEC_ENABLED = false
 }
@@ -45,9 +45,9 @@ do
 	if type(getgenv) == "function" then
 		local g = getgenv()
 		if g.AFKTY_REEXEC_ENABLED == nil then g.AFKTY_REEXEC_ENABLED = false end
-		if g.AFKTY_FUNC1_ACTIVE == nil then g.AFKTY_FUNC1_ACTIVE = false end
-		if g.AFKTY_FUNC2_ACTIVE == nil then g.AFKTY_FUNC2_ACTIVE = false end
-		if g.AFKTY_FUNC3_ACTIVE == nil then g.AFKTY_FUNC3_ACTIVE = false end
+		if g.AFKTY_JOIN_ACTIVE == nil then g.AFKTY_JOIN_ACTIVE = false end
+		if g.AFKTY_LEAVE_ACTIVE == nil then g.AFKTY_LEAVE_ACTIVE = false end
+		if g.AFKTY_CHAT_ACTIVE == nil then g.AFKTY_CHAT_ACTIVE = false end
 	end
 end
 local function TryLoadSDK()
@@ -459,23 +459,28 @@ local function makeCell(idx, title)
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = cell
 	local active = false
-	if idx == 1 then active = Config.FUNC1_ACTIVE or false end
-	if idx == 2 then active = Config.FUNC2_ACTIVE or false end
-	if idx == 3 then active = Config.FUNC3_ACTIVE or false end
+	if idx == 1 then active = Config.JOIN_ACTIVE or false end
+	if idx == 2 then active = Config.LEAVE_ACTIVE or false end
+	if idx == 3 then active = Config.CHAT_ACTIVE or false end
 	if idx == 4 then active = Config.REEXEC_ENABLED or false end
 	box.Text = active and "X" or ""
 	box.MouseButton1Click:Connect(function()
 		active = not active
 		box.Text = active and "X" or ""
-		if idx == 1 then Config.FUNC1_ACTIVE = active end
-		if idx == 2 then Config.FUNC2_ACTIVE = active end
-		if idx == 3 then Config.FUNC3_ACTIVE = active end
+		if idx == 1 then Config.JOIN_ACTIVE = active end
+		if idx == 2 then Config.LEAVE_ACTIVE = active end
+		if idx == 3 then Config.CHAT_ACTIVE = active end
 		if idx == 4 then
 			Config.REEXEC_ENABLED = active
 			if active then
 				pcall(function() queueReexec() end)
 			end
 		end
+		local g2 = (getgenv and getgenv()) or {}
+		if idx == 1 then g2.AFKTY_FUNC1_ACTIVE = active end
+		if idx == 2 then g2.AFKTY_FUNC2_ACTIVE = active end
+		if idx == 3 then g2.AFKTY_FUNC3_ACTIVE = active end
+		if idx == 4 then g2.AFKTY_REEXEC_ENABLED = active end
 		pcall(function() saveConfig() end)
 	end)
 end
@@ -487,24 +492,24 @@ makeCell(4, "Reexecute Automatically")
 -- Option connections
 do
 	Players.PlayerAdded:Connect(function(plr)
-		if not (Config and Config.FUNC1_ACTIVE) then return end
+		if not (Config and Config.JOIN_ACTIVE) then return end
 		pcall(function()
 			if AFKTY and AFKTY.Log then
-				AFKTY:Log("PlayerJoin, warn", "warn")
+				AFKTY:Log("PlayerJoin, warn")
 			end
 		end)
 	end)
 	Players.PlayerRemoving:Connect(function(plr)
-		if not (Config and Config.FUNC2_ACTIVE) then return end
+		if not (Config and Config.LEAVE_ACTIVE) then return end
 		pcall(function()
 			if AFKTY and AFKTY.Log then
-				AFKTY:Log("PlayerLeave, info", "info")
+				AFKTY:Log("PlayerLeave, info")
 			end
 		end)
 	end)
 	if LocalPlayer and LocalPlayer.Chatted then
 		LocalPlayer.Chatted:Connect(function(msg)
-			if not (Config and Config.FUNC3_ACTIVE) then return end
+			if not (Config and Config.CHAT_ACTIVE) then return end
 			pcall(function()
 				if AFKTY and AFKTY.Log then
 					AFKTY:Log("Chat Log: "..tostring(msg), "info")
