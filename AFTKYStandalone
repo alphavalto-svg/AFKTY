@@ -1,17 +1,56 @@
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
 local HUB_KEY = "hub_live_6812bd621eb9953eee0b5421ad25db77c7fcd9aea475bceb"
- 
+local GuiService = game:GetService("GuiService")
+local CoreGui = game:GetService("CoreGui")
 local SAVE_DIR = "AFKTY"
 local SAVE_FILE = "AFKTY/token.txt"
 
 local function getQueue()
 	return (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
 end
+do
+	if type(getgenv) == "function" then
+		local g = getgenv()
+		if g.AFKTY_REEXEC_ENABLED == nil then g.AFKTY_REEXEC_ENABLED = false end
+		if g.AFKTY_FUNC1_ACTIVE == nil then g.AFKTY_FUNC1_ACTIVE = false end
+		if g.AFKTY_FUNC2_ACTIVE == nil then g.AFKTY_FUNC2_ACTIVE = false end
+		if g.AFKTY_FUNC3_ACTIVE == nil then g.AFKTY_FUNC3_ACTIVE = false end
+	end
+end
+local function TryLoadSDK()
+	if type(loadstring) ~= "function" then
+		return nil, "loadstring unavailable"
+	end
+	local url = "https://raw.githubusercontent.com/alphavalto-svg/AFKTY/refs/heads/main/AFTKYStandalone"
+	local okBody, body = pcall(function() return game:HttpGet(url) end)
+	if not okBody or type(body) ~= "string" or #body == 0 then
+		return nil, "failed to fetch SDK"
+	end
+	local lf = loadstring(body)
+	if not lf then
+		return nil, "failed to compile SDK"
+	end
+	local okRun, res = pcall(lf)
+	if okRun and res ~= nil then
+		return res, nil
+	end
+	return nil, tostring(res)
+end
+local AFKTY = nil
+local function trim(s)
+	return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+local connecting = false
 local SAVE_DIR = "AFKTY"
 local SAVE_FILE = "AFKTY/token.txt"
 local function queueReexec()
+	local g = (getgenv and getgenv()) or {}
+	if not (g and g.AFKTY_REEXEC_ENABLED) then
+		return
+	end
 	local q = getQueue()
 	if not q then
 		return
@@ -41,18 +80,7 @@ if okBody and type(body)=="string" and #body>0 then
 			if okF and type(resF)=="table" then AFKTY = resF end
 		end
 		if AFKTY then
-			local cfg = {
-				userToken = token,
-				autoReconnect = false,
-				heartbeatInterval = 10000,
-				hubKey = "]=] .. HUB_KEY .. [=["
-			}
-			for _, m in ipairs({"Init","Initialize","Connect","Start"}) do
-				if AFKTY[m] then
-					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
-					if ok then break end
-				end
-			end
+			-- Setup event handlers (v3 API)
 			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
 				AFKTY.OnConnected:Connect(function()
 					pcall(function() AFKTY:SetStatus("Connected") end)
@@ -60,20 +88,32 @@ if okBody and type(body)=="string" and #body>0 then
 			end
 			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 				AFKTY.OnDisconnected:Connect(function()
-					pcall(function() AFKTY:SetStatus("Disconnected") end)
-					pcall(function() AFKTY:Alert("Disconnected") end)
-					pcall(function() AFKTY:Disconnect("Session closed") end)
 				end)
 			end
-			local okConn, isConn = pcall(function()
-				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-			end)
-			if not (okConn and isConn) then
-				pcall(function() AFKTY:Disconnect("Not connected") end)
+			if AFKTY.OnCommand and AFKTY.OnCommand.Connect then
+				AFKTY.OnCommand:Connect(function(data)
+					if data.command == "stop" then
+						AFKTY:Disconnect("Stopped by user")
+					end
+				end)
 			end
+			if AFKTY.OnError and AFKTY.OnError.Connect then
+				AFKTY.OnError:Connect(function(data)
+				end)
+			end
+			
+			-- Initialize connection (v3 API)
+			pcall(function()
+				AFKTY:Init({
+					hubKey = "]=] .. HUB_KEY .. [=[",
+					userToken = token,
+					debug = true
+				})
+			end)
 		end
 	end
 end
+
 local qq = (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
 if qq then
 	qq([==[
@@ -99,18 +139,7 @@ if okBody and type(body)=="string" and #body>0 then
 			if okF and type(resF)=="table" then AFKTY = resF end
 		end
 		if AFKTY then
-			local cfg = {
-				userToken = token,
-				autoReconnect = false,
-				heartbeatInterval = 10000,
-				hubKey = hubKey
-			}
-			for _, m in ipairs({"Init","Initialize","Connect","Start"}) do
-				if AFKTY[m] then
-					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
-					if ok then break end
-				end
-			end
+			-- Setup event handlers (v3 API)
 			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
 				AFKTY.OnConnected:Connect(function()
 					pcall(function() AFKTY:SetStatus("Connected") end)
@@ -118,17 +147,28 @@ if okBody and type(body)=="string" and #body>0 then
 			end
 			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 				AFKTY.OnDisconnected:Connect(function()
-					pcall(function() AFKTY:SetStatus("Disconnected") end)
-					pcall(function() AFKTY:Alert("Disconnected") end)
-					pcall(function() AFKTY:Disconnect("Session closed") end)
 				end)
 			end
-			local okConn, isConn = pcall(function()
-				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-			end)
-			if not (okConn and isConn) then
-				pcall(function() AFKTY:Disconnect("Not connected") end)
+			if AFKTY.OnCommand and AFKTY.OnCommand.Connect then
+				AFKTY.OnCommand:Connect(function(data)
+					if data.command == "stop" then
+						AFKTY:Disconnect("Stopped by user")
+					end
+				end)
 			end
+			if AFKTY.OnError and AFKTY.OnError.Connect then
+				AFKTY.OnError:Connect(function(data)
+				end)
+			end
+			
+			-- Initialize connection (v3 API)
+			pcall(function()
+				AFKTY:Init({
+					hubKey = hubKey,
+					userToken = token,
+					debug = true
+				})
+			end)
 		end
 	end
 end
@@ -171,15 +211,22 @@ Frame.Parent = ScreenGui
 local Corner = Instance.new("UICorner")
 Corner.CornerRadius = UDim.new(0, 10)
 Corner.Parent = Frame
+local Shimmer = Instance.new("UIStroke")
+Shimmer.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Shimmer.Thickness = 2
+Shimmer.Color = Color3.fromRGB(150, 100, 255)
+Shimmer.Transparency = 0.2
+Shimmer.Parent = Frame
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -160, 0, 24)
-Title.Position = UDim2.new(0, 110, 0, 10)
+Title.Size = UDim2.new(1, 0, 0, 24)
+Title.Position = UDim2.new(0, 0, 0, 10)
 Title.BackgroundTransparency = 1
 Title.Text = "AFKTY Standalone"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 20
 Title.TextColor3 = Color3.fromRGB(200, 160, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.Parent = Frame
 
 local DiscordButton = Instance.new("TextButton")
@@ -205,6 +252,9 @@ MinButton.Font = Enum.Font.GothamBold
 MinButton.TextSize = 16
 MinButton.AutoButtonColor = true
 MinButton.Parent = Frame
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(1, 0)
+MinCorner.Parent = MinButton
 
 local TokenInput = Instance.new("TextBox")
 TokenInput.Size = UDim2.new(1, -20, 0, 36)
@@ -222,7 +272,7 @@ InputCorner.CornerRadius = UDim.new(0, 8)
 InputCorner.Parent = TokenInput
 
 local ConnectButton = Instance.new("TextButton")
-ConnectButton.Size = UDim2.new(1, -20, 0, 36)
+ConnectButton.Size = UDim2.new(0.5, -15, 0, 36)
 ConnectButton.Position = UDim2.new(0, 10, 0, 90)
 ConnectButton.BackgroundColor3 = Color3.fromRGB(110, 70, 220)
 ConnectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -235,6 +285,19 @@ ConnectButton.Parent = Frame
 local ButtonCorner = Instance.new("UICorner")
 ButtonCorner.CornerRadius = UDim.new(0, 8)
 ButtonCorner.Parent = ConnectButton
+local DisconnectButton = Instance.new("TextButton")
+DisconnectButton.Size = UDim2.new(0.5, -15, 0, 36)
+DisconnectButton.Position = UDim2.new(0.5, 5, 0, 90)
+DisconnectButton.BackgroundColor3 = Color3.fromRGB(160, 60, 80)
+DisconnectButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DisconnectButton.Text = "Disconnect"
+DisconnectButton.Font = Enum.Font.GothamBold
+DisconnectButton.TextSize = 16
+DisconnectButton.AutoButtonColor = true
+DisconnectButton.Parent = Frame
+local DisconnectCorner = Instance.new("UICorner")
+DisconnectCorner.CornerRadius = UDim.new(0, 8)
+DisconnectCorner.Parent = DisconnectButton
 
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(1, -20, 0, 24)
@@ -245,19 +308,24 @@ StatusLabel.Font = Enum.Font.Gotham
 StatusLabel.TextSize = 14
 StatusLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
 StatusLabel.Parent = Frame
+local ExpandButton = Instance.new("TextButton")
+ExpandButton.Size = UDim2.new(1, -20, 0, 36)
+ExpandButton.Position = UDim2.new(0, 10, 0, 160)
+ExpandButton.BackgroundColor3 = Color3.fromRGB(110, 70, 220)
+ExpandButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExpandButton.Text = "Expand"
+ExpandButton.Font = Enum.Font.GothamBold
+ExpandButton.TextSize = 18
+ExpandButton.AutoButtonColor = true
+ExpandButton.Parent = Frame
+local ExpandCorner = Instance.new("UICorner")
+ExpandCorner.CornerRadius = UDim.new(0, 8)
+ExpandCorner.Parent = ExpandButton
 
-local CreatorLabel = Instance.new("TextLabel")
-CreatorLabel.Size = UDim2.new(0, 220, 0, 18)
-CreatorLabel.Position = UDim2.new(0.5, -110, 1, -26)
-CreatorLabel.BackgroundTransparency = 1
-CreatorLabel.Text = "Creator: Toasty + AlphaValto"
-CreatorLabel.Font = Enum.Font.GothamSemibold
-CreatorLabel.TextSize = 14
-CreatorLabel.TextColor3 = Color3.fromRGB(200, 160, 255)
-CreatorLabel.TextXAlignment = Enum.TextXAlignment.Center
-CreatorLabel.Parent = Frame
+-- creator label
 
 local RestoreButton
+local SlidePanel
 
 local UIS = game:GetService("UserInputService")
 local dragging = false
@@ -291,6 +359,203 @@ UIS.InputChanged:Connect(function(input)
 	end
 end)
 
+-- Expandable Panel
+SlidePanel = Instance.new("Frame")
+SlidePanel.Size = UDim2.new(0, 360, 0, 160)
+SlidePanel.BackgroundColor3 = Color3.fromRGB(18, 14, 26)
+SlidePanel.BorderSizePixel = 0
+SlidePanel.Visible = false
+SlidePanel.Parent = ScreenGui
+local SlideCorner = Instance.new("UICorner")
+SlideCorner.CornerRadius = UDim.new(0, 10)
+SlideCorner.Parent = SlidePanel
+local PanelStroke = Instance.new("UIStroke")
+PanelStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+PanelStroke.Thickness = 2
+PanelStroke.Color = Color3.fromRGB(150, 100, 255)
+PanelStroke.Transparency = 0.2
+PanelStroke.Parent = SlidePanel
+local PanelCreator = Instance.new("TextLabel")
+PanelCreator.Size = UDim2.new(0, 300, 0, 18)
+PanelCreator.Position = UDim2.new(0.5, -150, 0, 8)
+PanelCreator.BackgroundTransparency = 1
+PanelCreator.Text = "Creator: Toasty + AlphaValto"
+PanelCreator.Font = Enum.Font.GothamSemibold
+PanelCreator.TextSize = 14
+PanelCreator.TextColor3 = Color3.fromRGB(200, 160, 255)
+PanelCreator.TextXAlignment = Enum.TextXAlignment.Center
+PanelCreator.Parent = SlidePanel
+local FuncGrid = Instance.new("Frame")
+FuncGrid.Size = UDim2.new(0, 328, 0, 96)
+FuncGrid.Position = UDim2.new(0.5, -164, 0, 32)
+FuncGrid.BackgroundTransparency = 1
+FuncGrid.Parent = SlidePanel
+local Grid = Instance.new("UIGridLayout")
+Grid.CellSize = UDim2.new(0, 160, 0, 44)
+Grid.CellPadding = UDim2.new(0, 8, 0, 8)
+Grid.FillDirectionMaxCells = 2
+Grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Grid.Parent = FuncGrid
+local function makeCell(idx, title)
+	local cell = Instance.new("Frame")
+	cell.BackgroundTransparency = 1
+	cell.Parent = FuncGrid
+	local list = Instance.new("UIListLayout")
+	list.FillDirection = Enum.FillDirection.Horizontal
+	list.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	list.VerticalAlignment = Enum.VerticalAlignment.Center
+	list.Padding = UDim.new(0, 8)
+	list.Parent = cell
+	local box = Instance.new("TextButton")
+	box.Size = UDim2.new(0, 24, 0, 24)
+	box.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	box.TextColor3 = Color3.fromRGB(255, 255, 255)
+	box.Text = ""
+	box.AutoButtonColor = true
+	box.Parent = cell
+	local bc = Instance.new("UICorner")
+	bc.CornerRadius = UDim.new(0, 6)
+	bc.Parent = box
+	local bs = Instance.new("UIStroke")
+	bs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	bs.Thickness = 2
+	bs.Color = Color3.fromRGB(150, 100, 255)
+	bs.Transparency = 0
+	bs.Parent = box
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1, -40, 1, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = title
+	lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextSize = 14
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.Parent = cell
+	local g = (getgenv and getgenv()) or {}
+	local active = false
+	if g then
+		if idx == 1 then active = g.AFKTY_FUNC1_ACTIVE or false end
+		if idx == 2 then active = g.AFKTY_FUNC2_ACTIVE or false end
+		if idx == 3 then active = g.AFKTY_FUNC3_ACTIVE or false end
+		if idx == 4 then active = g.AFKTY_REEXEC_ENABLED or false end
+	end
+	box.Text = active and "X" or ""
+	box.MouseButton1Click:Connect(function()
+		active = not active
+		box.Text = active and "X" or ""
+		local g2 = (getgenv and getgenv()) or {}
+		if not g2 then return end
+		if idx == 1 then g2.AFKTY_FUNC1_ACTIVE = active end
+		if idx == 2 then g2.AFKTY_FUNC2_ACTIVE = active end
+		if idx == 3 then g2.AFKTY_FUNC3_ACTIVE = active end
+		if idx == 4 then
+			g2.AFKTY_REEXEC_ENABLED = active
+			if active then
+				pcall(function() queueReexec() end)
+			end
+		end
+	end)
+end
+makeCell(1, "Players Join")
+makeCell(2, "Players Leave")
+makeCell(3, "Chat Log")
+makeCell(4, "Reexecute on Teleport")
+
+-- Option connections
+do
+	local function isOn(flag)
+		local g = (getgenv and getgenv()) or {}
+		return g and g[flag]
+	end
+	Players.PlayerAdded:Connect(function(plr)
+		if not isOn("AFKTY_FUNC1_ACTIVE") then return end
+		pcall(function()
+			if AFKTY and AFKTY.Log then
+				AFKTY:Log("PlayerJoin, warn", "warn")
+			end
+		end)
+	end)
+	Players.PlayerRemoving:Connect(function(plr)
+		if not isOn("AFKTY_FUNC2_ACTIVE") then return end
+		pcall(function()
+			if AFKTY and AFKTY.Log then
+				AFKTY:Log("PlayerLeave, info", "info")
+			end
+		end)
+	end)
+	if LocalPlayer and LocalPlayer.Chatted then
+		LocalPlayer.Chatted:Connect(function(msg)
+			if not isOn("AFKTY_FUNC3_ACTIVE") then return end
+			pcall(function()
+				if AFKTY and AFKTY.Log then
+					AFKTY:Log("Chat Log: "..tostring(msg), "info")
+				end
+			end)
+		end)
+	end
+end
+
+local function panelAnchorPos()
+	return UDim2.new(Frame.Position.X.Scale, Frame.Position.X.Offset, Frame.Position.Y.Scale, Frame.Position.Y.Offset + Frame.Size.Y.Offset)
+end
+local function syncPanelAnchor()
+	if not SlidePanel then return end
+	SlidePanel.Position = panelAnchorPos()
+	SlidePanel.Size = UDim2.new(0, Frame.Size.X.Offset, 0, SlidePanel.Size.Y.Offset)
+end
+Frame:GetPropertyChangedSignal("Position"):Connect(syncPanelAnchor)
+Frame:GetPropertyChangedSignal("Size"):Connect(syncPanelAnchor)
+local panelOpen = false
+local function togglePanel()
+	if not panelOpen then
+		SlidePanel.Visible = true
+		SlidePanel.Position = panelAnchorPos()
+		SlidePanel.Size = UDim2.new(0, Frame.Size.X.Offset, 0, 0)
+		panelOpen = true
+		ExpandButton.Text = "Close"
+		local t = TweenService:Create(SlidePanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, Frame.Size.X.Offset, 0, 160)})
+		t:Play()
+	else
+		panelOpen = false
+		ExpandButton.Text = "Expand"
+		local t = TweenService:Create(SlidePanel, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, Frame.Size.X.Offset, 0, 0)})
+		t:Play()
+		t.Completed:Wait()
+		SlidePanel.Visible = false
+	end
+end
+
+ExpandButton.MouseButton1Click:Connect(togglePanel)
+DiscordButton.Parent = SlidePanel
+DiscordButton.Position = UDim2.new(0, 10, 1, -28)
+DiscordButton.Size = UDim2.new(0, 100, 0, 24)
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(1, 0)
+DiscordCorner.Parent = DiscordButton
+local LinkButton = Instance.new("TextButton")
+LinkButton.Size = UDim2.new(0, 100, 0, 24)
+LinkButton.Position = UDim2.new(1, -110, 1, -28)
+LinkButton.BackgroundColor3 = Color3.fromRGB(110, 70, 220)
+LinkButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+LinkButton.Text = "Link"
+LinkButton.Font = Enum.Font.GothamBold
+LinkButton.TextSize = 14
+LinkButton.AutoButtonColor = true
+LinkButton.Parent = SlidePanel
+local LinkCorner = Instance.new("UICorner")
+LinkCorner.CornerRadius = UDim.new(0, 8)
+LinkCorner.Parent = LinkButton
+LinkButton.MouseButton1Click:Connect(function()
+	local g = (getgenv and getgenv()) or {}
+	local url = g.AFKTY_SECOND_LINK or "https://afkty.vercel.app"
+	if setclipboard then
+		pcall(function() setclipboard(url) end)
+	else
+		pcall(function() game:GetService("StarterGui"):SetCore("SendNotification",{Title="AFKTY",Text="Link: "..url,Duration=5}) end)
+	end
+end)
+
+--Discord Button
 DiscordButton.MouseButton1Click:Connect(function()
 	local link = "https://discord.gg/YyWrDqvCzH"
 	local ok = false
@@ -307,6 +572,11 @@ end)
 
 MinButton.MouseButton1Click:Connect(function()
 	Frame.Visible = false
+	if SlidePanel then
+		SlidePanel.Visible = false
+	end
+	panelOpen = false
+	ExpandButton.Text = "Expand"
 	if not RestoreButton then
 		RestoreButton = Instance.new("TextButton")
 		RestoreButton.Size = UDim2.new(0, 40, 0, 40)
@@ -330,14 +600,6 @@ MinButton.MouseButton1Click:Connect(function()
 	end
 	RestoreButton.Visible = true
 end)
-
-local AFKTY = nil
-
-local function trim(s)
-	return (s:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
-local connecting = false
 
 ConnectButton.MouseButton1Click:Connect(function()
 	if connecting then
@@ -458,17 +720,19 @@ ConnectButton.MouseButton1Click:Connect(function()
 		connecting = false
 		return
 	end
+	
+	-- Setup event handlers (v3 API)
 	if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
 		AFKTY.OnConnected:Connect(function()
-	StatusLabel.Text = "Connected"
-	ConnectButton.Text = "Connected"
-	pcall(function() AFKTY:SetStatus("Connected") end)
+			StatusLabel.Text = "Connected"
+			ConnectButton.Text = "Connected"
+			pcall(function() AFKTY:SetStatus("Connected") end)
 		end)
 	end
 	if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 		AFKTY.OnDisconnected:Connect(function()
 			StatusLabel.Text = "Disconnected"
-			ConnectButton.Text = "Disconnected"
+			ConnectButton.Text = "Connect"
 			pcall(function() AFKTY:SetStatus("Disconnected") end)
 			pcall(function() AFKTY:Alert("Disconnected") end)
 			pcall(function() AFKTY:Disconnect("Session closed") end)
@@ -476,6 +740,17 @@ ConnectButton.MouseButton1Click:Connect(function()
 			TokenInput.Active = true
 			ConnectButton.Active = true
 			ConnectButton.AutoButtonColor = true
+		end)
+	end
+	if AFKTY.OnCommand and AFKTY.OnCommand.Connect then
+		AFKTY.OnCommand:Connect(function(data)
+			if typeof(data) == "table" and tostring(data.command) == "stop" then
+				pcall(function() AFKTY:Log("Stop requested by user") end)
+				pcall(function() AFKTY:Disconnect("Stopped by user") end)
+				if type(stopScript) == "function" then
+					pcall(function() stopScript() end)
+				end
+			end
 		end)
 	end
 	if AFKTY.OnError and AFKTY.OnError.Connect then
@@ -489,41 +764,25 @@ ConnectButton.MouseButton1Click:Connect(function()
 			StatusLabel.Text = msg
 		end)
 	end
+	
 	if type(AFKTY) == "function" then
 		local okf, resf = pcall(function() return AFKTY() end)
 		if okf and type(resf) == "table" then
 			AFKTY = resf
 		end
 	end
-	local cfg = {
-		userToken = token,
-		autoReconnect = false,
-		heartbeatInterval = 10000,
-		hubKey = HUB_KEY
-	}
-	local errInit = nil
-	local okInit = false
-	local methods = {"Init","Initialize","Connect","Start"}
-	for _, m in ipairs(methods) do
-		if AFKTY[m] then
-			local ok, err = pcall(function() AFKTY[m](AFKTY, cfg) end)
-			if ok then
-				okInit = true
-				break
-			else
-				errInit = err
-			end
-		end
-	end
-	if not okInit then
-		local msg = "Init failed"
-		if errInit then
-			msg = msg .. ": " .. tostring(errInit)
-		end
-		if not cfg.hubKey and errInit and tostring(errInit):lower():find("hub") then
-			msg = "Hub key required"
-		end
-		StatusLabel.Text = msg
+	
+	-- Initialize connection (v3 API)
+	local initOk, initErr = pcall(function()
+		AFKTY:Init({
+			hubKey = HUB_KEY,
+			userToken = token,
+			debug = true
+		})
+	end)
+	
+	if not initOk then
+		StatusLabel.Text = "Init failed: " .. tostring(initErr)
 		ConnectButton.Text = "Connect"
 		TokenInput.Active = true
 		ConnectButton.Active = true
@@ -531,13 +790,21 @@ ConnectButton.MouseButton1Click:Connect(function()
 		connecting = false
 		return
 	end
-	local okConn, isConn = pcall(function()
-		return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
-	end)
-	if not (okConn and isConn) then
-		pcall(function() AFKTY:Disconnect("Not connected") end)
+	local g = (getgenv and getgenv()) or {}
+	if g and g.AFKTY_REEXEC_ENABLED then
+		queueReexec()
 	end
-	queueReexec()
+end)
+DisconnectButton.MouseButton1Click:Connect(function()
+	if AFKTY and AFKTY.Disconnect then
+		pcall(function() AFKTY:Disconnect("Stopped by user") end)
+	end
+	StatusLabel.Text = "Disconnected"
+	ConnectButton.Text = "Connect"
+	connecting = false
+	TokenInput.Active = true
+	ConnectButton.Active = true
+	ConnectButton.AutoButtonColor = true
 end)
 spawn(function()
 	local fileToken = nil
@@ -637,6 +904,8 @@ spawn(function()
 				connecting = false
 				return
 			end
+			
+			-- Setup event handlers (v3 API)
 			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
 				AFKTY.OnConnected:Connect(function()
 					StatusLabel.Text = "Connected"
@@ -644,45 +913,100 @@ spawn(function()
 					pcall(function() AFKTY:SetStatus("Connected") end)
 				end)
 			end
-			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
-				AFKTY.OnDisconnected:Connect(function()
-					StatusLabel.Text = "Disconnected"
-					ConnectButton.Text = "Disconnected"
-					pcall(function() AFKTY:SetStatus("Disconnected") end)
-					pcall(function() AFKTY:Alert("Disconnected") end)
-					pcall(function() AFKTY:Disconnect("Session closed") end)
-					connecting = false
-					TokenInput.Active = true
-					ConnectButton.Active = true
-					ConnectButton.AutoButtonColor = true
+	if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
+		AFKTY.OnDisconnected:Connect(function()
+			StatusLabel.Text = "Disconnected"
+			ConnectButton.Text = "Connect"
+			pcall(function() AFKTY:SetStatus("Disconnected") end)
+			pcall(function() AFKTY:Alert("Disconnected") end)
+			pcall(function() AFKTY:Disconnect("Session closed") end)
+			connecting = false
+			TokenInput.Active = true
+			ConnectButton.Active = true
+			ConnectButton.AutoButtonColor = true
+		end)
+	end
+	if AFKTY.OnCommand and AFKTY.OnCommand.Connect then
+		AFKTY.OnCommand:Connect(function(data)
+			if typeof(data) == "table" and tostring(data.command) == "stop" then
+				pcall(function() AFKTY:Log("Stop requested by user") end)
+				pcall(function() AFKTY:Disconnect("Stopped by user") end)
+				if type(stopScript) == "function" then
+					pcall(function() stopScript() end)
+				end
+			end
+		end)
+	end
+			if AFKTY.OnError and AFKTY.OnError.Connect then
+				AFKTY.OnError:Connect(function(data)
 				end)
 			end
+			
 			if type(AFKTY) == "function" then
 				local okf, resf = pcall(function() return AFKTY() end)
 				if okf and type(resf) == "table" then
 					AFKTY = resf
 				end
 			end
-			local cfg = {
-				userToken = token,
-				autoReconnect = false,
-				heartbeatInterval = 10000,
-				hubKey = HUB_KEY
-			}
-			local methods = {"Init","Initialize","Connect","Start"}
-			for _, m in ipairs(methods) do
-				if AFKTY[m] then
-					local ok = pcall(function() AFKTY[m](AFKTY, cfg) end)
-					if ok then break end
-				end
-			end
-			local okConn, isConn = pcall(function()
-				return AFKTY and AFKTY.IsConnected and AFKTY:IsConnected()
+			
+			-- Initialize connection (v3 API)
+			pcall(function()
+				AFKTY:Init({
+					hubKey = HUB_KEY,
+					userToken = token,
+					debug = true
+				})
 			end)
-			if not (okConn and isConn) then
-				pcall(function() AFKTY:Disconnect("Not connected") end)
+			
+			local g = (getgenv and getgenv()) or {}
+			if g and g.AFKTY_REEXEC_ENABLED then
+				queueReexec()
 			end
-			queueReexec()
+		end
+	end
+end)
+
+
+-- listen for kicks maybe disconnect or whatever shit
+pcall(function()
+	GuiService.ErrorMessageChanged:Connect(function(errorMsg)
+		if AFKTY and AFKTY.IsConnected and AFKTY:IsConnected() then
+			pcall(function()
+				AFKTY:Alert(errorMsg)
+			end)
+		end
+	end)
+end)
+
+-- error prompet handling and listener
+pcall(function()
+	local promptGui = CoreGui:FindFirstChild("RobloxPromptGui")
+	if promptGui then
+		local overlay = promptGui:FindFirstChild("promptOverlay")
+		if overlay then
+			overlay.ChildAdded:Connect(function(child)
+				if child.Name == "ErrorPrompt" then
+					task.wait(0.1)
+					local errorText = "Unknown Error"
+					pcall(function()
+						local msgArea = child:FindFirstChild("MessageArea")
+						if msgArea then
+							local errorFrame = msgArea:FindFirstChild("ErrorFrame")
+							if errorFrame then
+								local errorMessage = errorFrame:FindFirstChild("ErrorMessage")
+								if errorMessage and errorMessage:IsA("TextLabel") then
+									errorText = errorMessage.Text
+								end
+							end
+						end
+					end)
+					if AFKTY and AFKTY.IsConnected and AFKTY:IsConnected() then
+						pcall(function()
+							AFKTY:Alert(errorText)
+						end)
+					end
+				end
+			end)
 		end
 	end
 end)
