@@ -84,15 +84,20 @@ local function trim(s)
 end
 local connecting = false
 local SAVE_DIR = "AFKTY"
-local g.AFKTY_SAVED_TOKEN = "AFKTY/token.txt"
 local SAVE_FILE = "AFKTY/token.txt"
 local reexecQueued = false
 local function getSavedToken()
 	local tok = ""
-	if isfile and readfile and isfile(SAVE_FILE) then
-		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
-		if ok and type(val)=="string" then
-			tok = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
+	if readfile then
+		local canRead = true
+		if isfile then
+			canRead = isfile(SAVE_FILE)
+		end
+		if canRead then
+			local ok, val = pcall(function() return readfile(SAVE_FILE) end)
+			if ok and type(val)=="string" then
+				tok = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
+			end
 		end
 	end
 	if tok == "" and type(getgenv)=="function" then
@@ -260,6 +265,17 @@ TokenInput.Parent = Frame
 local InputCorner = Instance.new("UICorner")
 InputCorner.CornerRadius = UDim.new(0, 8)
 InputCorner.Parent = TokenInput
+do
+	local tok = ""
+	local okTok = false
+	if type(getSavedToken) == "function" then
+		tok = getSavedToken()
+		if tok and #tok == 6 then okTok = true end
+	end
+	if okTok then
+		TokenInput.Text = tok
+	end
+end
 do
 	local guard = false
 	TokenInput:GetPropertyChangedSignal("Text"):Connect(function()
