@@ -57,6 +57,7 @@ do
 		if g.AFKTY_JOIN_ACTIVE == nil then g.AFKTY_JOIN_ACTIVE = false end
 		if g.AFKTY_LEAVE_ACTIVE == nil then g.AFKTY_LEAVE_ACTIVE = false end
 		if g.AFKTY_CHAT_ACTIVE == nil then g.AFKTY_CHAT_ACTIVE = false end
+		g.AFKTY_CONNECTED = false
 	end
 end
 local function TryLoadSDK()
@@ -828,10 +829,27 @@ spawn(function()
 			fileToken = (g.AFKTY_SAVED_TOKEN:gsub("^%s+",""):gsub("%s+$","")):upper()
 		end
 	end
+	-- Retry briefly to allow queued payload to set AFKTY_SAVED_TOKEN after teleport
+	if (not fileToken or #fileToken ~= 6) and type(getgenv)=="function" then
+		for i = 1, 6 do
+			task.wait(1)
+			local g = getgenv()
+			if g and type(g.AFKTY_SAVED_TOKEN)=="string" then
+				fileToken = (g.AFKTY_SAVED_TOKEN:gsub("^%s+",""):gsub("%s+$","")):upper()
+				if #fileToken == 6 then break end
+			end
+		end
+	end
 	if fileToken and #fileToken==6 then
 		TokenInput.Text = fileToken
 
 		if not connecting then
+			if type(getgenv)=="function" then
+				local g = getgenv()
+				if g and g.AFKTY_CONNECTED then
+					return
+				end
+			end
 			ConnectButton.AutoButtonColor = false
 			ConnectButton.Text = "Connecting..."
 			TokenInput.Active = false
