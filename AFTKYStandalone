@@ -141,10 +141,14 @@ if okBody and type(body)=="string" and #body>0 then
 			if AFKTY.OnConnected and AFKTY.OnConnected.Connect then
 				AFKTY.OnConnected:Connect(function()
 					pcall(function() AFKTY:SetStatus("Connected") end)
+					local gg = (getgenv and getgenv()) or {}
+					gg.AFKTY_CONNECTED = true
 				end)
 			end
 			if AFKTY.OnDisconnected and AFKTY.OnDisconnected.Connect then
 				AFKTY.OnDisconnected:Connect(function()
+					local gg = (getgenv and getgenv()) or {}
+					gg.AFKTY_CONNECTED = false
 				end)
 			end
 			if AFKTY.OnCommand and AFKTY.OnCommand.Connect then
@@ -807,7 +811,7 @@ end)
 spawn(function()
 	if type(getgenv)=="function" then
 		local g = getgenv()
-		if g and g.AFKTY_SKIP_AUTOCONNECT then
+		if g and g.AFKTY_CONNECTED then
 			return
 		end
 	end
