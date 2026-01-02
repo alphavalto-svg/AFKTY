@@ -799,19 +799,7 @@ spawn(function()
 	if Config and Config.REEXEC_ENABLED then
 		return
 	end
-	local fileToken = nil
-	if isfile and readfile and isfile(SAVE_FILE) then
-		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
-		if ok and type(val)=="string" then
-			fileToken = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
-		end
-	end
-	if not fileToken and type(getgenv)=="function" then
-		local g = getgenv()
-		if g and type(g.AFKTY_SAVED_TOKEN)=="string" then
-			fileToken = (g.AFKTY_SAVED_TOKEN:gsub("^%s+",""):gsub("%s+$","")):upper()
-		end
-	end
+	local fileToken = getSavedToken()
 	if fileToken and #fileToken==6 then
 		TokenInput.Text = fileToken
 
