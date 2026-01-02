@@ -88,16 +88,10 @@ local SAVE_FILE = "AFKTY/token.txt"
 local reexecQueued = false
 local function getSavedToken()
 	local tok = ""
-	if readfile then
-		local canRead = true
-		if isfile then
-			canRead = isfile(SAVE_FILE)
-		end
-		if canRead then
-			local ok, val = pcall(function() return readfile(SAVE_FILE) end)
-			if ok and type(val)=="string" then
-				tok = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
-			end
+	if isfile and readfile and isfile(SAVE_FILE) then
+		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
+		if ok and type(val)=="string" then
+			tok = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
 		end
 	end
 	if tok == "" and type(getgenv)=="function" then
@@ -255,8 +249,8 @@ TokenInput.Size = UDim2.new(1, -20, 0, 36)
 TokenInput.Position = UDim2.new(0, 10, 0, 44)
 TokenInput.BackgroundColor3 = Color3.fromRGB(26, 20, 34)
 TokenInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-TokenInput.Text = ""
 TokenInput.PlaceholderText = "Enter Token"
+TokenInput.Text = ""
 TokenInput.Font = Enum.Font.Gotham
 TokenInput.TextSize = 16
 TokenInput.ClearTextOnFocus = false
@@ -267,12 +261,10 @@ InputCorner.CornerRadius = UDim.new(0, 8)
 InputCorner.Parent = TokenInput
 do
 	local tok = ""
-	local okTok = false
 	if type(getSavedToken) == "function" then
 		tok = getSavedToken()
-		if tok and #tok == 6 then okTok = true end
 	end
-	if okTok then
+	if tok ~= "" then
 		TokenInput.Text = tok
 	end
 end
@@ -816,7 +808,19 @@ spawn(function()
 	if Config and Config.REEXEC_ENABLED then
 		return
 	end
-	local fileToken = getSavedToken()
+	local fileToken = nil
+	if isfile and readfile and isfile(SAVE_FILE) then
+		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
+		if ok and type(val)=="string" then
+			fileToken = (val:gsub("^%s+",""):gsub("%s+$","")):upper()
+		end
+	end
+	if not fileToken and type(getgenv)=="function" then
+		local g = getgenv()
+		if g and type(g.AFKTY_SAVED_TOKEN)=="string" then
+			fileToken = (g.AFKTY_SAVED_TOKEN:gsub("^%s+",""):gsub("%s+$","")):upper()
+		end
+	end
 	if fileToken and #fileToken==6 then
 		TokenInput.Text = fileToken
 
