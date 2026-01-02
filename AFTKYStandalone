@@ -5,8 +5,38 @@ local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
 local HUB_KEY = "hub_live_6812bd621eb9953eee0b5421ad25db77c7fcd9aea475bceb"
 local GuiService = game:GetService("GuiService")
 local CoreGui = game:GetService("CoreGui")
-local SAVE_DIR = "AFKTY"
-local SAVE_FILE = "AFKTY/token.txt"
+local CONFIG_FILE = "AFKTY/config.json"
+local Config = {
+	FUNC1_ACTIVE = false,
+	FUNC2_ACTIVE = false,
+	FUNC3_ACTIVE = false,
+	REEXEC_ENABLED = false
+}
+local function saveConfig()
+	if not writefile then return end
+	if makefolder and isfolder and not isfolder(SAVE_DIR) then
+		pcall(function() makefolder(SAVE_DIR) end)
+	end
+	local HttpService = game:GetService("HttpService")
+	local json = HttpService:JSONEncode(Config)
+	pcall(function() writefile(CONFIG_FILE, json) end)
+end
+local function loadConfig()
+	if not isfile or not readfile then return end
+	if not isfile(CONFIG_FILE) then return end
+	local ok, content = pcall(function() return readfile(CONFIG_FILE) end)
+	if not ok or not content then return end
+	local HttpService = game:GetService("HttpService")
+	local ok2, data = pcall(function() return HttpService:JSONDecode(content) end)
+	if ok2 and type(data) == "table" then
+		for k, v in pairs(data) do
+			if Config[k] ~= nil then
+				Config[k] = v
+			end
+		end
+	end
+end
+loadConfig()
 
 local function getQueue()
 	return (syn and syn.queue_on_teleport) or _G.queue_on_teleport or queue_on_teleport or queueteleport or queue_teleport
@@ -47,10 +77,7 @@ local connecting = false
 local SAVE_DIR = "AFKTY"
 local SAVE_FILE = "AFKTY/token.txt"
 local function queueReexec()
-	local g = (getgenv and getgenv()) or {}
-	if not (g and g.AFKTY_REEXEC_ENABLED) then
-		return
-	end
+	if not (Config and Config.REEXEC_ENABLED) then return end
 	local q = getQueue()
 	if not q then
 		return
@@ -431,29 +458,25 @@ local function makeCell(idx, title)
 	lbl.TextSize = 14
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = cell
-	local g = (getgenv and getgenv()) or {}
 	local active = false
-	if g then
-		if idx == 1 then active = g.AFKTY_FUNC1_ACTIVE or false end
-		if idx == 2 then active = g.AFKTY_FUNC2_ACTIVE or false end
-		if idx == 3 then active = g.AFKTY_FUNC3_ACTIVE or false end
-		if idx == 4 then active = g.AFKTY_REEXEC_ENABLED or false end
-	end
+	if idx == 1 then active = Config.JOIN_ACTIVE or false end
+	if idx == 2 then active = Config.LEAVE_ACTIVE or false end
+	if idx == 3 then active = Config.CHAT_ACTIVE or false end
+	if idx == 4 then active = Config.REEXEC_ENABLED or false end
 	box.Text = active and "X" or ""
 	box.MouseButton1Click:Connect(function()
 		active = not active
 		box.Text = active and "X" or ""
-		local g2 = (getgenv and getgenv()) or {}
-		if not g2 then return end
-		if idx == 1 then g2.AFKTY_FUNC1_ACTIVE = active end
-		if idx == 2 then g2.AFKTY_FUNC2_ACTIVE = active end
-		if idx == 3 then g2.AFKTY_FUNC3_ACTIVE = active end
-		if idx == 4 then
-			g2.AFKTY_REEXEC_ENABLED = active
+		if idx == 1 then Config.JOIN_ACTIVE = active end
+		if idx == 2 then Config.LEAVE_ACTIVE = active end
+		if idx == 3 then Config.CHAT_ACTIVE = active end
+		if idx == 4 then Config.REEXEC_ENABLED = active end
+			Config.REEXEC_ENABLED = active
 			if active then
 				pcall(function() queueReexec() end)
 			end
 		end
+		pcall(function() saveConfig() end)
 	end)
 end
 makeCell(1, "Players Join")
@@ -463,29 +486,25 @@ makeCell(4, "Reexecute Automatically")
 
 -- Option connections
 do
-	local function isOn(flag)
-		local g = (getgenv and getgenv()) or {}
-		return g and g[flag]
-	end
 	Players.PlayerAdded:Connect(function(plr)
-		if not isOn("AFKTY_FUNC1_ACTIVE") then return end
+		if not (Config and Config.FUNC1_ACTIVE) then return end
 		pcall(function()
 			if AFKTY and AFKTY.Log then
-				AFKTY:Log("PlayerJoin, warn", "warn")
+				AFKTY:Log("PlayerJoin, warn")
 			end
 		end)
 	end)
 	Players.PlayerRemoving:Connect(function(plr)
-		if not isOn("AFKTY_FUNC2_ACTIVE") then return end
+		if not (Config and Config.FUNC2_ACTIVE) then return end
 		pcall(function()
 			if AFKTY and AFKTY.Log then
-				AFKTY:Log("PlayerLeave, info", "info")
+				AFKTY:Log("PlayerLeave, info")
 			end
 		end)
 	end)
 	if LocalPlayer and LocalPlayer.Chatted then
 		LocalPlayer.Chatted:Connect(function(msg)
-			if not isOn("AFKTY_FUNC3_ACTIVE") then return end
+			if not (Config and Config.FUNC3_ACTIVE) then return end
 			pcall(function()
 				if AFKTY and AFKTY.Log then
 					AFKTY:Log("Chat Log: "..tostring(msg), "info")
@@ -790,8 +809,7 @@ ConnectButton.MouseButton1Click:Connect(function()
 		connecting = false
 		return
 	end
-	local g = (getgenv and getgenv()) or {}
-	if g and g.AFKTY_REEXEC_ENABLED then
+	if Config and Config.REEXEC_ENABLED then
 		queueReexec()
 	end
 end)
@@ -958,8 +976,7 @@ spawn(function()
 				})
 			end)
 			
-			local g = (getgenv and getgenv()) or {}
-			if g and g.AFKTY_REEXEC_ENABLED then
+			if Config and Config.REEXEC_ENABLED then
 				queueReexec()
 			end
 		end
