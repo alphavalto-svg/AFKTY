@@ -459,18 +459,18 @@ local function makeCell(idx, title)
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.Parent = cell
 	local active = false
-	if idx == 1 then active = Config.JOIN_ACTIVE or false end
-	if idx == 2 then active = Config.LEAVE_ACTIVE or false end
-	if idx == 3 then active = Config.CHAT_ACTIVE or false end
+	if idx == 1 then active = Config.FUNC1_ACTIVE or false end
+	if idx == 2 then active = Config.FUNC2_ACTIVE or false end
+	if idx == 3 then active = Config.FUNC3_ACTIVE or false end
 	if idx == 4 then active = Config.REEXEC_ENABLED or false end
 	box.Text = active and "X" or ""
 	box.MouseButton1Click:Connect(function()
 		active = not active
 		box.Text = active and "X" or ""
-		if idx == 1 then Config.JOIN_ACTIVE = active end
-		if idx == 2 then Config.LEAVE_ACTIVE = active end
-		if idx == 3 then Config.CHAT_ACTIVE = active end
-		if idx == 4 then Config.REEXEC_ENABLED = active end
+		if idx == 1 then Config.FUNC1_ACTIVE = active end
+		if idx == 2 then Config.FUNC2_ACTIVE = active end
+		if idx == 3 then Config.FUNC3_ACTIVE = active end
+		if idx == 4 then
 			Config.REEXEC_ENABLED = active
 			if active then
 				pcall(function() queueReexec() end)
@@ -490,7 +490,7 @@ do
 		if not (Config and Config.FUNC1_ACTIVE) then return end
 		pcall(function()
 			if AFKTY and AFKTY.Log then
-				AFKTY:Log("PlayerJoin, warn")
+				AFKTY:Log("PlayerJoin, warn", "warn")
 			end
 		end)
 	end)
@@ -498,7 +498,7 @@ do
 		if not (Config and Config.FUNC2_ACTIVE) then return end
 		pcall(function()
 			if AFKTY and AFKTY.Log then
-				AFKTY:Log("PlayerLeave, info")
+				AFKTY:Log("PlayerLeave, info", "info")
 			end
 		end)
 	end)
@@ -752,9 +752,6 @@ ConnectButton.MouseButton1Click:Connect(function()
 		AFKTY.OnDisconnected:Connect(function()
 			StatusLabel.Text = "Disconnected"
 			ConnectButton.Text = "Connect"
-			pcall(function() AFKTY:SetStatus("Disconnected") end)
-			pcall(function() AFKTY:Alert("Disconnected") end)
-			pcall(function() AFKTY:Disconnect("Session closed") end)
 			connecting = false
 			TokenInput.Active = true
 			ConnectButton.Active = true
@@ -935,9 +932,6 @@ spawn(function()
 		AFKTY.OnDisconnected:Connect(function()
 			StatusLabel.Text = "Disconnected"
 			ConnectButton.Text = "Connect"
-			pcall(function() AFKTY:SetStatus("Disconnected") end)
-			pcall(function() AFKTY:Alert("Disconnected") end)
-			pcall(function() AFKTY:Disconnect("Session closed") end)
 			connecting = false
 			TokenInput.Active = true
 			ConnectButton.Active = true
