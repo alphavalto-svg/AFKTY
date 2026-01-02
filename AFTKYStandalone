@@ -7,9 +7,9 @@ local GuiService = game:GetService("GuiService")
 local CoreGui = game:GetService("CoreGui")
 local CONFIG_FILE = "AFKTY/config.json"
 local Config = {
-	FUNC1_ACTIVE = false,
-	FUNC2_ACTIVE = false,
-	FUNC3_ACTIVE = false,
+	JOIN_ACTIVE = false,
+	Leave_ACTIVE = false,
+	CHAT_ACTIVE = false,
 	REEXEC_ENABLED = false
 }
 local function saveConfig()
