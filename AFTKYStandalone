@@ -210,7 +210,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 24)
 Title.Position = UDim2.new(0, 0, 0, 10)
 Title.BackgroundTransparency = 1
-Title.Text = "AFKTY Standalone v1.0"
+Title.Text = "AFKTY Standalone"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 20
 Title.TextColor3 = Color3.fromRGB(200, 160, 255)
@@ -250,7 +250,6 @@ TokenInput.Position = UDim2.new(0, 10, 0, 44)
 TokenInput.BackgroundColor3 = Color3.fromRGB(26, 20, 34)
 TokenInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 TokenInput.PlaceholderText = "Enter Token"
-TokenInput.Text = ""
 TokenInput.Font = Enum.Font.Gotham
 TokenInput.TextSize = 16
 TokenInput.ClearTextOnFocus = false
@@ -805,6 +804,9 @@ DisconnectButton.MouseButton1Click:Connect(function()
 	ConnectButton.AutoButtonColor = true
 end)
 spawn(function()
+	if Config and Config.REEXEC_ENABLED then
+		return
+	end
 	local fileToken = nil
 	if isfile and readfile and isfile(SAVE_FILE) then
 		local ok, val = pcall(function() return readfile(SAVE_FILE) end)
@@ -820,12 +822,12 @@ spawn(function()
 	end
 	if fileToken and #fileToken==6 then
 		TokenInput.Text = fileToken
-		if connecting then return end
-		if AFKTY and AFKTY.IsConnected and AFKTY:IsConnected() then return end
-		ConnectButton.AutoButtonColor = false
-		ConnectButton.Text = "Connecting..."
-		TokenInput.Active = false
-		ConnectButton.Active = false
+
+		if not connecting then
+			ConnectButton.AutoButtonColor = false
+			ConnectButton.Text = "Connecting..."
+			TokenInput.Active = false
+			ConnectButton.Active = false
 
 			local token = fileToken
 			connecting = true
