@@ -110,12 +110,13 @@ local function queueReexec()
 		return
 	end
 	local embedToken = getSavedToken()
-	local code = ([=[
+local code = ([=[
 if not game:IsLoaded() then game.Loaded:Wait() end
 repeat task.wait() until game:GetService("Players").LocalPlayer
 task.wait(1)
 local g = (getgenv and getgenv()) or {}
 g.AFKTY_HUB_KEY = "]=] .. HUB_KEY .. [=["
+g.AFKTY_SKIP_AUTOCONNECT = true
 g.AFKTY_SAVED_TOKEN = "]=] .. embedToken .. [=["
 local token = ""
 if isfile and readfile and isfile("AFKTY/token.txt") then
@@ -804,8 +805,11 @@ DisconnectButton.MouseButton1Click:Connect(function()
 	ConnectButton.AutoButtonColor = true
 end)
 spawn(function()
-	if Config and Config.REEXEC_ENABLED then
-		return
+	if type(getgenv)=="function" then
+		local g = getgenv()
+		if g and g.AFKTY_SKIP_AUTOCONNECT then
+			return
+		end
 	end
 	local fileToken = nil
 	if isfile and readfile and isfile(SAVE_FILE) then
